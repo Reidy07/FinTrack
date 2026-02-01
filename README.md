@@ -46,6 +46,7 @@ FinTrack.Core
 │   └── Properties/           # Configuración de lanzamiento
 ├── .gitignore
 └── README.md
+```
 
 ## Tecnologías Utilizadas
 
@@ -97,4 +98,5 @@ dotnet ef database update --startup-project ../FinTrack.Web
 # 5. Ejecutar aplicación
 cd ../FinTrack.Web
 dotnet run
+
 
