@@ -50,7 +50,7 @@ namespace FinTrack.Infrastructure.Data.Configurations
             builder.HasOne<Core.Entities.User>()
                 .WithMany(u => u.Alerts)
                 .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Alerts_AspNetUsers_UserId");
         }
     }

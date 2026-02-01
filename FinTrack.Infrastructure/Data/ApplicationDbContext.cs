@@ -1,4 +1,5 @@
 ﻿using FinTrack.Core.Entities;
+using FinTrack.Infrastructure.Extensions;
 using FinTrack.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ namespace FinTrack.Infrastructure.Data
 
             // Aplicar TODAS las configuraciones del ensamblado actual
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            builder.ConfigureCascadeBehavior();
 
             // Configuraciones adicionales globales
             ConfigureGlobalProperties(builder);
