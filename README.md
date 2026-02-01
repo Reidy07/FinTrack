@@ -23,28 +23,29 @@ FinTrack.Infrastructure (Data Access)
 FinTrack.Core
 
 ## Estructura del Repositorio
-├── FinTrack.Core/ # Lógica de negocio
-│ ├── Entities/ # Entidades del dominio (User, Expense, Income, etc.)
-│ ├── Interfaces/ # Contratos/Interfaces (Repository, Services)
-│ ├── Services/ # Interfaces de servicios de negocio
-│ ├── DTOs/ # Objetos de transferencia de datos
-│ └── Validators/ # Reglas de validación con FluentValidation
-├── FinTrack.Infrastructure/ # Acceso a datos e implementaciones
-│ ├── Data/ # Contexto EF y configuraciones
-│ │ ├── Configurations/ # Configuraciones de entidades
-│ │ └── Migrations/ # Migraciones de base de datos
-│ ├── Repositories/ # Implementación de repositorios
-│ ├── Identity/ # Configuración de ASP.NET Identity
-│ ├── ML/ # Modelos y servicios de ML.NET
-│ └── Extensions/ # Extensiones de servicios
-├── FinTrack.Web/ # Capa de presentación
-│ ├── Controllers/ # Controladores MVC
-│ ├── Views/ # Vistas Razor
-│ ├── ViewModels/ # Modelos para vistas
-│ ├── wwwroot/ # Archivos estáticos (CSS, JS, imágenes)
-│ └── Properties/ # Configuración de lanzamiento
-├── .gitignore # Archivos ignorados por Git
-└── README.md # Este archivo
+```text
+├── FinTrack.Core/            # Lógica de negocio
+│   ├── Entities/             # Entidades del dominio (User, Expense, Income, etc.)
+│   ├── Interfaces/           # Contratos/Interfaces (Repository, Services)
+│   ├── Services/             # Interfaces de servicios de negocio
+│   ├── DTOs/                 # Objetos de transferencia de datos
+│   └── Validators/           # Reglas de validación con FluentValidation
+├── FinTrack.Infrastructure/  # Acceso a datos e implementaciones
+│   ├── Data/                 # Contexto EF y configuraciones
+│   │   ├── Configurations/   # Configuraciones de entidades
+│   │   └── Migrations/       # Migraciones de base de datos
+│   ├── Repositories/         # Implementación de repositorios
+│   ├── Identity/             # Configuración de ASP.NET Identity
+│   ├── ML/                   # Modelos y servicios de ML.NET
+│   └── Extensions/           # Extensiones de servicios
+├── FinTrack.Web/             # Capa de presentación
+│   ├── Controllers/          # Controladores MVC
+│   ├── Views/                # Vistas Razor
+│   ├── ViewModels/           # Modelos para vistas
+│   ├── wwwroot/              # Archivos estáticos (CSS, JS, imágenes)
+│   └── Properties/           # Configuración de lanzamiento
+├── .gitignore
+└── README.md
 
 ## Tecnologías Utilizadas
 
@@ -96,3 +97,4 @@ dotnet ef database update --startup-project ../FinTrack.Web
 # 5. Ejecutar aplicación
 cd ../FinTrack.Web
 dotnet run
+
