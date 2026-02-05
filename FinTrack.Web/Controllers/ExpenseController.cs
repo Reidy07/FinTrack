@@ -1,14 +1,32 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FinTrack.Core.DTOs;
+using FinTrack.Core.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace FinTrack.Web.Controllers
 {
     public class ExpenseController : Controller
     {
-        [HttpGet]
-        public IActionResult Index()
+        private readonly IFinancialService _financialService;
+
+        public ExpenseController(IFinancialService financialService)
         {
-            ViewData["Title"] = "Gastos";
-            return View();
+            _financialService = financialService;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var userId = User.Identity!.Name!;
+            var expenses = await _financialService.GetExpensesAsync(userId);
+            return View(expenses);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(ExpenseDto dto)
+        {
+            dto.UserId = User.Identity!.Name!;
+            await _financialService.AddExpenseAsync(dto);
+            return RedirectToAction(nameof(Index));
         }
     }
 }
