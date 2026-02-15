@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace FinTrack.Infrastructure.Data.Migrations
+namespace FinTrack.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260215105047_InitialCreate")]
+    [Migration("20260215153905_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
