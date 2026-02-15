@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+/FinTrack.Infrastructure/Data/Migrations/20260215105047_InitialCreate.cs
+/FinTrack.Infrastructure/Data/Migrations/ApplicationDbContextModelSnapshot.cs
+/FinTrack.Web/appsettings.json

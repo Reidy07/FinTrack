@@ -1,8 +1,12 @@
 using FinTrack.Infrastructure.Data;
-using FinTrack.Infrastructure.Data;
 using FinTrack.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using FinTrack.Core.Interfaces;
+using FinTrack.Core.Interfaces.Services;
+using FinTrack.Core.Services;
+using FinTrack.Infrastructure.Extensions;
+using FinTrack.Infrastructure.Services;
 
 namespace FinTrack.Web
 {
@@ -19,22 +23,28 @@ namespace FinTrack.Web
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            builder.Services.AddInfrastructureServices(builder.Configuration);
+
 
             // Configure Identity with custom ApplicationUser and password settings
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
             {
-                options.SignIn.RequireConfirmedAccount = false;
-                options.Password.RequireDigit = true;
-                options.Password.RequiredLength = 6;
+                options.SignIn.RequireConfirmedAccount = false; 
+                options.Password.RequireDigit = false;         
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireLowercase = true;
+                options.Password.RequiredLength = 6;
             })
-            .AddEntityFrameworkStores<ApplicationDbContext>();
+                .AddEntityFrameworkStores<ApplicationDbContext>();
 
             // Add services for controllers and views
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
+
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IFinancialService, FinancialService>();
+            builder.Services.AddScoped<IPredictionService, PredictionService>();
 
             var app = builder.Build();
 

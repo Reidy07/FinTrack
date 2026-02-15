@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspNetCoreGeneratedDocument;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FinTrack.Web.Controllers
 {
@@ -6,7 +7,7 @@ namespace FinTrack.Web.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            return View("/Monthly");
         }
     }
 }

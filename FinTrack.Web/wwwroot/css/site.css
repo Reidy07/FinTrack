@@ -1,22 +1,157 @@
-html {
-  font-size: 14px;
-}
+/* wwwroot/css/site.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+:root {
+    /* Paleta extraída de tus imágenes Figma */
+    --bg-body: #0B0E14; /* Fondo muy oscuro, casi negro */
+    --bg-card: #151A23; /* Fondo de tarjetas */
+    --bg-input: #1F2937; /* Fondo de inputs */
+    --primary-color: #10B981; /* Verde Esmeralda (Botones, logos) */
+    --primary-hover: #059669;
+    --text-main: #FFFFFF;
+    --text-muted: #9CA3AF;
+    --border-color: #2D3748;
+    --danger-color: #EF4444; /* Rojo para gastos/errores */
+    --sidebar-width: 260px;
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* --- Títulos y Textos --- */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+/* --- Tarjetas (Cards) --- */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.25rem;
+    font-weight: 600;
+}
+
+/* --- Formularios (Inputs oscuros) --- */
+.form-control, .form-select {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+    .form-control:focus, .form-select:focus {
+        background-color: var(--bg-input);
+        border-color: var(--primary-color);
+        color: var(--text-main);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+.form-floating label {
+    color: var(--text-muted);
+}
+
+/* --- Botones --- */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+}
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border: none;
+}
+
+/* --- Links --- */
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+}
+
+    a:hover {
+        color: var(--primary-hover);
+    }
+
+/* --- Layout Específico (Sidebar) --- */
+.sidebar-container {
+    width: var(--sidebar-width);
+    height: 100vh;
+    background-color: var(--bg-body); /* O un tono ligeramente distinto si prefieres */
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    z-index: 1000;
+}
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* --- Navegación Sidebar --- */
+.nav-link {
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+    .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+    }
+
+    .nav-link.active {
+        background-color: rgba(16, 185, 129, 0.1); /* Verde muy suave */
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+/* --- Estilos Login --- */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

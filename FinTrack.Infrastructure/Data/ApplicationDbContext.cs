@@ -26,7 +26,7 @@ namespace FinTrack.Infrastructure.Data
             // Llamar al método base para configurar Identity
             base.OnModelCreating(builder);
 
-            // Aplicar TODAS las configuraciones del ensamblado actual
+            // Aplicar todas las configuraciones del ensamblado actual
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             builder.ConfigureCascadeBehavior();
