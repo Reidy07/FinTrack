@@ -2,6 +2,7 @@
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims; 
 
 namespace FinTrack.Web.Controllers
@@ -18,10 +19,12 @@ namespace FinTrack.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Usamos ClaimTypes.NameIdentifier para obtener el ID (Guid)
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var expenses = await _financialService.GetExpensesByUserAsync(userId, null, null);
+
+            // ESTO ES NECESARIO PARA EL MODAL
+            var categories = await _financialService.GetCategoriesByUserAsync(userId);
+            ViewBag.Categories = new SelectList(categories.Where(c => c.Type == Core.Enum.CategoryType.Expense || c.Type == Core.Enum.CategoryType.Both), "Id", "Name");
 
             return View(expenses);
         }

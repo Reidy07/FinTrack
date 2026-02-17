@@ -1,15 +1,24 @@
-﻿
+﻿using FinTrack.Core.Entities;
+using FinTrack.Core.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-namespace FinTrack.Web.Controllers
+[Authorize]
+public class AlertsController : Controller
 {
-    public class AlertsController : Controller
+    private readonly IFinancialService _financialService;
+
+    public AlertsController(IFinancialService financialService)
     {
-        [HttpGet]
-        public IActionResult Index()
-        {
-            ViewData["Title"] = "Alertas";
-            return View();
-        }
+        _financialService = financialService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var alerts = await _financialService.GetAlertsAsync(userId);
+        return View(alerts);
     }
 }

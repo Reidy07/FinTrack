@@ -1,137 +1,111 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using FinTrack.Infrastructure.Identity
-
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
-
 @model FinTrack.Core.DTOs.DashboardSummaryDto
 
 @{
     ViewData["Title"] = "Dashboard";
+    // Obtenemos nombre usuario
+    var user = await UserManager.GetUserAsync(User);
+    var firstName = user?.FirstName ?? User.Identity.Name;
 }
 
-<!-- Topbar integrado -->
+<!-- Topbar -->
 <div class="d-flex justify-content-between align-items-end mb-4">
     <div>
-        @if (SignInManager.IsSignedIn(User))
-        {
-            /* --- MODO LOGUEADO: SIDEBAR + CONTENIDO --- */
-
-            // Obtenemos el usuario para mostrar su nombre o inicial
-            var user = await UserManager.GetUserAsync(User);
-            var userName = user?.FirstName ?? @user.FirstName!;
-
-        
-        <h2 class="mb-0">Bienvenido, @user.FirstName!</h2> <!-- Aquí puedes poner el nombre real si lo tienes en ViewBag -->
+        <h2 class="mb-0">Bienvenido, @firstName</h2>
         <p class="text-muted mb-0">@DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy")</p>
-        }
     </div>
     <div class="position-relative">
         <i class="bi bi-bell text-muted fs-4"></i>
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-            3
-        </span>
+        <!-- Si hay alertas no leídas, mostramos el badge -->
+        @if (Model.RecentAlerts.Any())
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                @Model.RecentAlerts.Count
+            </span>
+        }
     </div>
 </div>
 
 <h4 class="mb-3">Dashboard</h4>
 <p class="text-muted">Gestión y análisis financiero</p>
 
-<!-- Tarjetas Resumen -->
+<!-- Tarjetas Resumen (Mismo HTML tuyo, datos dinámicos) -->
 <div class="row g-4 mb-4">
-    <!-- Ingresos -->
     <div class="col-md-4">
-        <div class="card h-100 p-3">
+        <div class="card h-100 p-3 card-custom">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <span class="text-muted">Ingresos (mes)</span>
-                <div class="bg-dark p-2 rounded">
-                    <i class="bi bi-graph-up-arrow text-success"></i>
-                </div>
+                <div class="bg-dark p-2 rounded"><i class="bi bi-graph-up-arrow text-success"></i></div>
             </div>
             <h2 class="mb-1 text-light">@Model.TotalIncome.ToString("C0")</h2>
-            <small class="text-muted">Vs. mes anterior: <span class="text-danger">0%</span></small>
         </div>
     </div>
-
-    <!-- Gastos -->
     <div class="col-md-4">
-        <div class="card h-100 p-3">
+        <div class="card h-100 p-3 card-custom">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <span class="text-muted">Gastos (mes)</span>
-                <div class="bg-danger bg-opacity-25 p-2 rounded">
-                    <i class="bi bi-graph-down-arrow text-danger"></i>
-                </div>
+                <div class="bg-danger bg-opacity-25 p-2 rounded"><i class="bi bi-graph-down-arrow text-danger"></i></div>
             </div>
             <h2 class="mb-1 text-light">@Model.TotalExpenses.ToString("C0")</h2>
-            <small class="text-muted">Vs. mes anterior: <span class="text-success">0%</span></small>
         </div>
     </div>
-
-    <!-- Balance -->
     <div class="col-md-4">
-        <div class="card h-100 p-3">
+        <div class="card h-100 p-3 card-custom">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <span class="text-muted">Balance</span>
-                <div class="bg-success bg-opacity-25 p-2 rounded">
-                    <i class="bi bi-wallet2 text-success"></i>
-                </div>
+                <div class="bg-success bg-opacity-25 p-2 rounded"><i class="bi bi-wallet2 text-success"></i></div>
             </div>
             <h2 class="mb-1 text-light">@Model.Balance.ToString("C0")</h2>
-            <small class="text-muted">Ahorro estimado</small>
         </div>
     </div>
 </div>
 
 <!-- Gráficos y Alertas -->
 <div class="row g-4">
-    <!-- Gráfico Principal (Ocupa 2/3) -->
+    <!-- Gráfico -->
     <div class="col-lg-8">
-        <div class="card p-4 h-100">
-            <h5 class="mb-1">Tendencia mensual</h5>
+        <div class="card p-4 h-100 card-custom">
+            <h5 class="mb-1 text-light">Tendencia mensual</h5>
             <p class="text-muted small mb-4">Ingresos vs gastos (últimos 6 meses)</p>
-
             <div style="height: 300px;">
                 <canvas id="dashboardChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Alertas (Ocupa 1/3) -->
+    <!-- Alertas Dinámicas -->
     <div class="col-lg-4">
-        <div class="card p-4 h-100">
+        <div class="card p-4 h-100 card-custom">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="mb-0 text-light">Alertas</h5>
-                <a href="#" class="text-primary small">Ver todas</a>
+                <a asp-controller="Alerts" asp-action="Index" class="text-primary small">Ver todas</a>
             </div>
 
-            <!-- Lista de Alertas -->
             <div class="d-flex flex-column gap-3">
-                <!-- Alerta 1 (Roja) -->
-                <div class="card p-3 border-danger border bg-danger bg-opacity-10">
-                    <div class="d-flex justify-content-between">
-                        <span class="fw-bold text-danger small">Presupuesto excedido</span>
-                        <span class="text-muted small">Hoy</span>
-                    </div>
-                    <p class="mb-0 text-muted small mt-1">Gastos superan el límite mensual</p>
-                </div>
+                @if (Model.RecentAlerts != null && Model.RecentAlerts.Any())
+                {
+                    @foreach (var alert in Model.RecentAlerts)
+                    {
+                        // Estilo dinámico según severidad
+                        var borderClass = alert.Severity == "Critical" ? "border-danger bg-danger bg-opacity-10" : "border-secondary";
+                        var textClass = alert.Severity == "Critical" ? "text-danger" : "text-white";
 
-                <!-- Alerta 2 (Normal) -->
-                <div class="card p-3">
-                    <div class="d-flex justify-content-between">
-                        <span class="fw-bold text-white small">Gasto inusual</span>
-                        <span class="text-muted small">Ayer</span>
-                    </div>
-                    <p class="mb-0 text-muted small mt-1">Transporte salió 80% más esta semana</p>
-                </div>
-
-                <!-- Alerta 3 (Normal) -->
-                <div class="card p-3">
-                    <div class="d-flex justify-content-between">
-                        <span class="fw-bold text-white small">Proyección</span>
-                        <span class="text-muted small">Ayer</span>
-                    </div>
-                    <p class="mb-0 text-muted small mt-1">Podrás ahorrar el mes con +$320</p>
-                </div>
+                        <div class="card p-3 border @borderClass">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold @textClass small">@alert.Title</span>
+                                <span class="text-muted small">@alert.CreatedAt.ToString("dd MMM")</span>
+                            </div>
+                            <p class="mb-0 text-muted small mt-1">@alert.Message</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted small text-center">No hay alertas recientes.</p>
+                }
             </div>
         </div>
     </div>
@@ -139,25 +113,28 @@
 
 @section Scripts {
     <script>
-        // Configuración Chart.js para que se vea como en Figma (Curvas suaves y colores neón)
         var ctx = document.getElementById('dashboardChart').getContext('2d');
-
-        // Gradiente para la línea verde
         var gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
         gradientGreen.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
         gradientGreen.addColorStop(1, 'rgba(16, 185, 129, 0)');
 
+        // DATOS DINÁMICOS
+        // Usamos Html.Raw + Json.Serialize para convertir la lista C# a Array JS
+        var labelsData = @Html.Raw(Json.Serialize(Model.ChartLabels));
+        var incomeData = @Html.Raw(Json.Serialize(Model.ChartIncomeData));
+        var expenseData = @Html.Raw(Json.Serialize(Model.ChartExpenseData));
+
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Sep', 'Oct', 'Nov', 'Dic', 'Ene', 'Feb'],
+                labels: labelsData,
                 datasets: [
                     {
                         label: 'Ingresos',
-                        data: [1800, 500, 2600, 2100, 4000, 2100], // Datos fake para demo
-                        borderColor: '#10B981', // Verde
+                        data: incomeData,
+                        borderColor: '#10B981',
                         backgroundColor: gradientGreen,
-                        tension: 0.4, // Curva suave
+                        tension: 0.4,
                         fill: true,
                         pointRadius: 4,
                         pointBackgroundColor: '#0B0E14',
@@ -166,8 +143,8 @@
                     },
                     {
                         label: 'Gastos',
-                        data: [800, 600, 700, 600, 200, 250], // Datos fake
-                        borderColor: '#EF4444', // Rojo
+                        data: expenseData,
+                        borderColor: '#EF4444',
                         tension: 0.4,
                         borderWidth: 2,
                         pointRadius: 4,
@@ -180,10 +157,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#9CA3AF', usePointStyle: true, boxWidth: 6 }
-                    }
+                    legend: { position: 'bottom', labels: { color: '#9CA3AF', usePointStyle: true, boxWidth: 6 } }
                 },
                 scales: {
                     y: {

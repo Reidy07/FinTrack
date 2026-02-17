@@ -16,17 +16,10 @@ namespace FinTrack.Web
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-            // Configure DbContext
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
 
-            // Configure Identity with custom ApplicationUser and password settings
+            // Identity with custom ApplicationUser and password settings
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = false; 
@@ -42,9 +35,7 @@ namespace FinTrack.Web
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
 
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddScoped<IFinancialService, FinancialService>();
-            builder.Services.AddScoped<IPredictionService, PredictionService>();
+
 
             var app = builder.Build();
 
@@ -64,7 +55,7 @@ namespace FinTrack.Web
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(

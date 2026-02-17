@@ -47,6 +47,23 @@ namespace FinTrack.Infrastructure.Repositories
             _dbSet.Remove(entity);
         }
 
+        public virtual async Task<IEnumerable<T>> FindAsync(
+    Expression<Func<T, bool>> predicate,
+    params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return await query.Where(predicate).ToListAsync();
+        }
+
         public virtual async Task<bool> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync() > 0;
