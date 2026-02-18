@@ -1,4 +1,5 @@
 ﻿using FinTrack.Core.Entities;
+using FinTrack.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -47,11 +48,11 @@ namespace FinTrack.Infrastructure.Data.Configurations
                 .HasDatabaseName("IX_Alerts_Type");
 
             // Relaciones
-            builder.HasOne<Core.Entities.User>()
-                .WithMany(u => u.Alerts)
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("FK_Alerts_AspNetUsers_UserId");
+            builder.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

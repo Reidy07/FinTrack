@@ -1,24 +1,22 @@
-﻿namespace FinTrack.Core.Entities
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FinTrack.Core.Entities
 {
     public class Budget
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
+        [Column(TypeName = "decimal(18,2)")]
+        [DataType(DataType.Currency)]
+        [DisplayFormat(DataFormatString = "{0:C2}", ApplyFormatInEditMode = false)]
         public decimal Amount { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-       
-        // Puede ser por categoría o general
-        public int? CategoryId { get; set; }  // Nullable = presupuesto general
+        public int? CategoryId { get; set; }
 
-        
-        // Foreign Keys
-        public string UserId { get; set; }
-
-        
-        // Navigation
-        public User User { get; set; }
-        public Category Category { get; set; }
+        public string UserId { get; set; } = string.Empty;
+        public Category? Category { get; set; }
     }
 }

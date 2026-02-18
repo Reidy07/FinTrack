@@ -7,16 +7,11 @@ namespace FinTrack.Infrastructure.Repositories
 {
     public class ExpenseRepository : GenericRepository<Expense>, IExpenseRepository
     {
-        private readonly ApplicationDbContext _context;
-
-        public ExpenseRepository(ApplicationDbContext context) : base(context)
-        {
-            _context = context;
-        }
+        public ExpenseRepository(ApplicationDbContext context) : base(context) { }
 
         public async Task<IEnumerable<Expense>> GetByUserAsync(string userId)
         {
-            return await _context.Expenses
+            return await _dbSet
                 .Where(e => e.UserId == userId)
                 .ToListAsync();
         }

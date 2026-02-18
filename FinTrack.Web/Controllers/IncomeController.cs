@@ -17,46 +17,56 @@ namespace FinTrack.Web.Controllers
             _financialService = financialService;
         }
 
+        private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        private async Task LoadIncomeCategoriesAsync(string userId)
+        {
+            var categories = await _financialService.GetCategoriesByUserAsync(userId);
+
+            // Solo categorías de Ingreso o Ambas
+            ViewBag.Categories = new SelectList(
+                categories.Where(c =>
+                    c.Type == Core.Enum.CategoryType.Income ||
+                    c.Type == Core.Enum.CategoryType.Both),
+                "Id",
+                "Name"
+            );
+        }
+
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
             var incomes = await _financialService.GetIncomesByUserAsync(userId, null, null);
+            await LoadIncomeCategoriesAsync(userId);
+
             return View(incomes);
         }
 
         public async Task<IActionResult> Create()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var categories = await _financialService.GetCategoriesByUserAsync(userId);
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
 
-            // Filtramos solo categorías de Gasto o Ambas
-            ViewBag.Categories = new SelectList(
-                categories.Where(c => c.Type == Core.Enum.CategoryType.Expense || c.Type == Core.Enum.CategoryType.Both),
-                "Id",
-                "Name");
-
-            return View();
+            await LoadIncomeCategoriesAsync(userId);
+            return View(new IncomeDto { Date = DateTime.Today });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ExpenseDto dto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(IncomeDto dto)
         {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
             if (!ModelState.IsValid)
             {
-                // Si falla, hay que recargar la lista, si no la vista explota
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var categories = await _financialService.GetCategoriesByUserAsync(userId);
-                ViewBag.Categories = new SelectList(
-                    categories.Where(c => c.Type == Core.Enum.CategoryType.Expense || c.Type == Core.Enum.CategoryType.Both),
-                    "Id",
-                    "Name");
-
+                await LoadIncomeCategoriesAsync(userId);
                 return View(dto);
             }
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _financialService.AddExpenseAsync(dto, currentUserId);
-
+            await _financialService.AddIncomeAsync(dto, userId);
             return RedirectToAction(nameof(Index));
         }
     }

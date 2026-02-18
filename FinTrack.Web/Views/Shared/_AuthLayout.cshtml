@@ -1,0 +1,29 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - FinTrack</title>
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="min-h-screen text-white bg-[#070A12]">
+    <!-- Background -->
+    <div class="fixed inset-0 pointer-events-none">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.18),transparent_55%),radial-gradient(ellipse_at_bottom,rgba(99,102,241,0.18),transparent_55%)]"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent,rgba(255,255,255,0.03))]"></div>
+        <div class="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-emerald-500/15 blur-3xl"></div>
+        <div class="absolute top-1/4 -right-40 h-[560px] w-[560px] rounded-full bg-indigo-500/15 blur-3xl"></div>
+        <div class="absolute bottom-[-220px] left-1/3 h-[560px] w-[560px] rounded-full bg-cyan-500/10 blur-3xl"></div>
+    </div>
+
+    <main class="relative min-h-screen flex items-center justify-center px-4 py-10">
+        @RenderBody()
+    </main>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

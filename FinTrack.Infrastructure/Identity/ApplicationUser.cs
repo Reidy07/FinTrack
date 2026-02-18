@@ -9,8 +9,21 @@ namespace FinTrack.Infrastructure.Identity
     public class ApplicationUser: IdentityUser, IUser
     {
         // Implementación de IUser
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+        string IUser.Email
+        {
+            get => Email ?? string.Empty;
+            set => Email = value;
+        }
+
+        string IUser.UserName
+        {
+            get => UserName ?? string.Empty;
+            set => UserName = value;
+        }
+
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Conversión implícita (opcional pero útil)
@@ -19,12 +32,13 @@ namespace FinTrack.Infrastructure.Identity
             return new User
             {
                 Id = appUser.Id,
-                Email = appUser.Email,
-                UserName = appUser.UserName,
+                Email = appUser.Email ?? string.Empty,
+                UserName = appUser.UserName ?? string.Empty,
                 FirstName = appUser.FirstName,
                 LastName = appUser.LastName,
                 CreatedAt = appUser.CreatedAt
             };
         }
+
     }
 }

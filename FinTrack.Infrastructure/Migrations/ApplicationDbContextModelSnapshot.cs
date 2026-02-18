@@ -71,16 +71,10 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Type")
                         .HasDatabaseName("IX_Alerts_Type");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "IsRead", "CreatedAt")
                         .HasDatabaseName("IX_Alerts_UserId_IsRead_CreatedAt");
@@ -118,16 +112,10 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("IX_Budgets_CategoryId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "StartDate", "EndDate")
                         .HasDatabaseName("IX_Budgets_UserId_Dates");
@@ -174,16 +162,10 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_Categories_Name");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Name")
                         .IsUnique()
@@ -233,16 +215,10 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("IX_Expenses_CategoryId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Date")
                         .HasDatabaseName("IX_Expenses_UserId_Date");
@@ -279,16 +255,10 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("IX_Incomes_CategoryId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Date")
                         .HasDatabaseName("IX_Incomes_UserId_Date");
@@ -327,10 +297,6 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
@@ -338,41 +304,10 @@ namespace FinTrack.Infrastructure.Migrations
                     b.HasIndex("GeneratedDate")
                         .HasDatabaseName("IX_Predictions_GeneratedDate");
 
-                    b.HasIndex("UserId1");
-
                     b.HasIndex("UserId", "PredictionDate")
                         .HasDatabaseName("IX_Predictions_UserId_PredictionDate");
 
                     b.ToTable("Predictions", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrack.Core.Entities.User", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("FinTrack.Infrastructure.Identity.ApplicationUser", b =>
@@ -599,20 +534,11 @@ namespace FinTrack.Infrastructure.Migrations
 
             modelBuilder.Entity("FinTrack.Core.Entities.Alert", b =>
                 {
-                    b.HasOne("FinTrack.Core.Entities.User", null)
-                        .WithMany("Alerts")
+                    b.HasOne("FinTrack.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Alerts_AspNetUsers_UserId");
-
-                    b.HasOne("FinTrack.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FinTrack.Core.Entities.Budget", b =>
@@ -623,40 +549,23 @@ namespace FinTrack.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_Budgets_Categories_CategoryId");
 
-                    b.HasOne("FinTrack.Core.Entities.User", null)
-                        .WithMany("Budgets")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Budgets_AspNetUsers_UserId");
-
-                    b.HasOne("FinTrack.Core.Entities.User", "User")
+                    b.HasOne("FinTrack.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
-                        .HasForeignKey("UserId1")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FinTrack.Core.Entities.Category", b =>
                 {
-                    b.HasOne("FinTrack.Core.Entities.User", null)
+                    b.HasOne("FinTrack.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Categories_AspNetUsers_UserId");
-
-                    b.HasOne("FinTrack.Core.Entities.User", "User")
-                        .WithMany("Categories")
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FinTrack.Core.Entities.Expense", b =>
@@ -668,29 +577,13 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Expenses_Categories_CategoryId");
 
-                    b.HasOne("FinTrack.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Expenses_AspNetUsers_UserId");
-
                     b.HasOne("FinTrack.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Expenses_AspNetUsers_UserId1");
-
-                    b.HasOne("FinTrack.Core.Entities.User", "User")
-                        .WithMany("Expenses")
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FinTrack.Core.Entities.Income", b =>
@@ -702,29 +595,13 @@ namespace FinTrack.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Incomes_Categories_CategoryId");
 
-                    b.HasOne("FinTrack.Core.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Incomes_AspNetUsers_UserId");
-
                     b.HasOne("FinTrack.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Incomes_AspNetUsers_UserId1");
-
-                    b.HasOne("FinTrack.Core.Entities.User", "User")
-                        .WithMany("Incomes")
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FinTrack.Core.Entities.Prediction", b =>
@@ -735,22 +612,13 @@ namespace FinTrack.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_Predictions_Categories_CategoryId");
 
-                    b.HasOne("FinTrack.Core.Entities.User", null)
-                        .WithMany("Predictions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Predictions_AspNetUsers_UserId");
-
-                    b.HasOne("FinTrack.Core.Entities.User", "User")
+                    b.HasOne("FinTrack.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
-                        .HasForeignKey("UserId1")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -809,21 +677,6 @@ namespace FinTrack.Infrastructure.Migrations
                     b.Navigation("Expenses");
 
                     b.Navigation("Incomes");
-                });
-
-            modelBuilder.Entity("FinTrack.Core.Entities.User", b =>
-                {
-                    b.Navigation("Alerts");
-
-                    b.Navigation("Budgets");
-
-                    b.Navigation("Categories");
-
-                    b.Navigation("Expenses");
-
-                    b.Navigation("Incomes");
-
-                    b.Navigation("Predictions");
                 });
 #pragma warning restore 612, 618
         }

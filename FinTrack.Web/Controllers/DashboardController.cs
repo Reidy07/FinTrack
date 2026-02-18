@@ -20,6 +20,7 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
 
             // 1. Obtener datos reales
             var summary = await _financialService.GetDashboardSummaryAsync(userId, DateTime.Now);

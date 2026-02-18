@@ -1,25 +1,25 @@
-﻿namespace FinTrack.Core.Entities
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FinTrack.Core.Entities
 {
     public class Expense
     {
         public int Id { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        [DataType(DataType.Currency)]
+        [DisplayFormat(DataFormatString = "{0:C2}", ApplyFormatInEditMode = false)]
         public decimal Amount { get; set; }
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
         public DateTime Date { get; set; }
 
-        
-        // Para análisis ML
         public bool IsRecurring { get; set; } = false;
-        public string RecurringPattern { get; set; } // "Monthly", "Weekly", null
+        public string? RecurringPattern { get; set; }
 
-        
-        // Foreign Keys
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public int CategoryId { get; set; }
 
-        
-        // Navigation
-        public User User { get; set; }
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
     }
+
 }

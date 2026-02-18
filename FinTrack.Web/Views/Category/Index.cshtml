@@ -1,10 +1,269 @@
-﻿@{
-    ViewData["Title"] = "Category";
+﻿@model IEnumerable<FinTrack.Core.DTOs.CategoryDto>
+@using FinTrack.Core.Enum
+
+@{
+    ViewData["Title"] = "Categorías";
+    var expenses = Model?.Where(c => c.Type == CategoryType.Expense || c.Type == CategoryType.Both).ToList() ?? new();
+    var incomes = Model?.Where(c => c.Type == CategoryType.Income || c.Type == CategoryType.Both).ToList() ?? new();
 }
 
-<div class="card p-3">
-    <h5 class="mb-1">Category</h5>
-    <p class="text-muted mb-0">Pantalla base (UI en construcción).</p>
-    <p class="text-muted mb-0">Categoria aun esta a discusión pero ayuda a definir el proposito de los gastos como comida, streaming, pago de tarjetas o deudas, hogar etc...</p>
+<div class="ft-page">
+    <div class="ft-header">
+        <div>
+            <div class="ft-header-title">Categorías</div>
+            <div class="ft-header-sub">Organiza tus gastos e ingresos</div>
+        </div>
 
+        <button type="button" class="ft-btn-primary" data-modal-open="newCategoryModal">
+            <i class="bi bi-plus-lg"></i>
+            Nueva Categoría
+        </button>
+    </div>
+
+    <!-- CATEGORÍAS DE GASTOS -->
+    <section class="ft-section">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Categorías de Gastos</h3>
+            <span class="text-sm text-white/55">@expenses.Count</span>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            @if (expenses.Any())
+            {
+                foreach (var c in expenses)
+                {
+                    <div class="ft-card">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="h-11 w-11 rounded-2xl border border-white/10 flex items-center justify-center"
+                                     style="background:@(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)20;">
+                                    <i class="bi bi-coin text-white/80"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-semibold truncate">@c.Name</div>
+                                    <div class="text-xs text-white/50">Gasto</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <button type="button" class="ft-btn-ghost"
+                                        data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
+                                        data-modal-open="editCategoryModal">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <form asp-action="Delete" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <button type="submit" class="ft-btn-ghost text-red-300 hover:text-red-200">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(c.Description))
+                        {
+                            <div class="mt-3 text-sm text-white/60">@c.Description</div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="ft-empty md:col-span-2 xl:col-span-3">
+                    <div class="ft-empty-title">Aún no tienes categorías de gasto</div>
+                    <div class="ft-empty-sub">Crea una para clasificar tus gastos.</div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- CATEGORÍAS DE INGRESOS -->
+    <section class="ft-section mt-6">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Categorías de Ingresos</h3>
+            <span class="text-sm text-white/55">@incomes.Count</span>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            @if (incomes.Any())
+            {
+                foreach (var c in incomes)
+                {
+                    <div class="ft-card">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="h-11 w-11 rounded-2xl border border-white/10 flex items-center justify-center"
+                                     style="background:@(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)20;">
+                                    <i class="bi bi-cash-stack text-emerald-200"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-semibold truncate">@c.Name</div>
+                                    <div class="text-xs text-white/50">Ingreso</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <button type="button" class="ft-btn-ghost"
+                                        data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
+                                        data-modal-open="editCategoryModal">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <form asp-action="Delete" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <button type="submit" class="ft-btn-ghost text-red-300 hover:text-red-200">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(c.Description))
+                        {
+                            <div class="mt-3 text-sm text-white/60">@c.Description</div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="ft-empty md:col-span-2 xl:col-span-3">
+                    <div class="ft-empty-title">Aún no tienes categorías de ingreso</div>
+                    <div class="ft-empty-sub">Crea una para clasificar tus ingresos.</div>
+                </div>
+            }
+        </div>
+    </section>
 </div>
+
+<!-- MODAL: Crear -->
+<div id="newCategoryModal" class="hidden ft-modal-backdrop" aria-hidden="true">
+    <div class="ft-modal">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="text-lg font-semibold">Nueva categoría</div>
+                <div class="text-sm text-white/55">Define nombre, tipo y color</div>
+            </div>
+            <button type="button" class="ft-btn-ghost px-3 py-2" data-modal-close="newCategoryModal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="ft-divider my-5"></div>
+
+        <form asp-action="Create" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Nombre</label>
+                <input name="Name" class="ft-input" required />
+            </div>
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Descripción</label>
+                <input name="Description" class="ft-input" placeholder="Opcional" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Tipo</label>
+                    <select name="Type" class="ft-input" required>
+                        <option value="@((int)CategoryType.Expense)">Gasto</option>
+                        <option value="@((int)CategoryType.Income)">Ingreso</option>
+                        <option value="@((int)CategoryType.Both)">Ambos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Color</label>
+                    <input name="Color" class="ft-input" type="color" value="#3498db" />
+                </div>
+            </div>
+
+            <div class="ft-divider pt-5"></div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" class="ft-btn-secondary" data-modal-close="newCategoryModal">Cancelar</button>
+                <button type="submit" class="ft-btn-primary px-5">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: Editar -->
+<div id="editCategoryModal" class="hidden ft-modal-backdrop" aria-hidden="true">
+    <div class="ft-modal">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="text-lg font-semibold">Editar categoría</div>
+                <div class="text-sm text-white/55">Actualiza tipo, color o descripción</div>
+            </div>
+            <button type="button" class="ft-btn-ghost px-3 py-2" data-modal-close="editCategoryModal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="ft-divider my-5"></div>
+
+        <form asp-action="Edit" method="post" class="space-y-4" id="editCategoryForm">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="Id" id="edit_Id" />
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Nombre</label>
+                <input name="Name" id="edit_Name" class="ft-input" required />
+            </div>
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Descripción</label>
+                <input name="Description" id="edit_Description" class="ft-input" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Tipo</label>
+                    <select name="Type" id="edit_Type" class="ft-input" required>
+                        <option value="@((int)CategoryType.Expense)">Gasto</option>
+                        <option value="@((int)CategoryType.Income)">Ingreso</option>
+                        <option value="@((int)CategoryType.Both)">Ambos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Color</label>
+                    <input name="Color" id="edit_Color" class="ft-input" type="color" />
+                </div>
+            </div>
+
+            <div class="ft-divider pt-5"></div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" class="ft-btn-secondary" data-modal-close="editCategoryModal">Cancelar</button>
+                <button type="submit" class="ft-btn-primary px-5">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-edit]');
+            if (!btn) return;
+
+            const raw = btn.getAttribute('data-edit');
+            if (!raw) return;
+
+            const c = JSON.parse(raw);
+            document.getElementById('edit_Id').value = c.Id;
+            document.getElementById('edit_Name').value = c.Name || '';
+            document.getElementById('edit_Description').value = c.Description || '';
+            document.getElementById('edit_Type').value = c.Type; // enum int
+            document.getElementById('edit_Color').value = c.Color || '#3498db';
+        });
+    </script>
+}

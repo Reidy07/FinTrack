@@ -8,6 +8,10 @@ namespace FinTrack.Core.Interfaces.Services
         Task<ExpenseDto> AddExpenseAsync(ExpenseDto expenseDto, string userId);
         Task<IEnumerable<ExpenseDto>> GetExpensesByUserAsync(string userId, DateTime? startDate, DateTime? endDate);
 
+        Task<ExpenseDto?> GetExpenseByIdAsync(int id, string userId);
+        Task UpdateExpenseAsync(ExpenseDto expenseDto, string userId);
+        Task DeleteExpenseAsync(int id, string userId);
+
         // Ingresos
         Task<IncomeDto> AddIncomeAsync(IncomeDto incomeDto, string userId);
         Task<IEnumerable<IncomeDto>> GetIncomesByUserAsync(string userId, DateTime? startDate, DateTime? endDate);
@@ -15,6 +19,9 @@ namespace FinTrack.Core.Interfaces.Services
         // Categorías
         Task<IEnumerable<CategoryDto>> GetCategoriesByUserAsync(string userId);
         Task<CategoryDto> AddCategoryAsync(CategoryDto categoryDto, string userId);
+        Task<CategoryDto?> GetCategoryByIdAsync(int id, string userId);
+        Task UpdateCategoryAsync(CategoryDto dto, string userId);
+        Task DeleteCategoryAsync(int id, string userId);
 
         // Presupuestos
         Task<IEnumerable<BudgetDto>> GetBudgetsByUserAsync(string userId);

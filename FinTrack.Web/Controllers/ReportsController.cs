@@ -24,6 +24,8 @@ public class ReportsController : Controller
     public async Task<IActionResult> GetMonthlyFlow()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
 
         var expenses = await _financialService.GetExpensesByUserAsync(userId, DateTime.Now.AddMonths(-6), DateTime.Now);
         var incomes = await _financialService.GetIncomesByUserAsync(userId, DateTime.Now.AddMonths(-6), DateTime.Now);

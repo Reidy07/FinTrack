@@ -18,7 +18,10 @@ public class AlertsController : Controller
     public async Task<IActionResult> Index()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
         var alerts = await _financialService.GetAlertsAsync(userId);
         return View(alerts);
     }
+
 }

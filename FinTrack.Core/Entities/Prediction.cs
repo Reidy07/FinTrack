@@ -14,11 +14,10 @@
 
         
         // Foreign Keys
-        public string UserId { get; set; }
+        public string UserId { get; set; } = null!;
 
-        
+
         // Navigation
-        public User User { get; set; }
-        public Category Category { get; set; }
+        public Category? Category { get; set; } 
     }
 }

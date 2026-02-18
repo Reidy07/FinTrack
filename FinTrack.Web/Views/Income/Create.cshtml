@@ -1,0 +1,67 @@
+﻿@model FinTrack.Core.DTOs.IncomeDto
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Nuevo ingreso";
+}
+
+<div class="ft-page">
+    <div class="ft-header">
+        <div>
+            <div class="ft-header-title">Nuevo ingreso</div>
+            <div class="ft-header-sub">Registra un ingreso y asígnalo a una categoría</div>
+        </div>
+
+        <a asp-action="Index" class="ft-btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver
+        </a>
+    </div>
+
+    <section class="ft-section max-w-3xl">
+        <form asp-action="Create" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-sm text-red-200"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Monto</label>
+                    <input asp-for="Amount" type="number" step="0.01" class="ft-input" placeholder="0.00" />
+                    <span asp-validation-for="Amount" class="text-xs text-red-200"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Fecha</label>
+                    <input asp-for="Date" type="date" class="ft-input" />
+                    <span asp-validation-for="Date" class="text-xs text-red-200"></span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Descripción</label>
+                <input asp-for="Description" class="ft-input" placeholder="Ej: Salario, Freelance, Venta..." />
+                <span asp-validation-for="Description" class="text-xs text-red-200"></span>
+            </div>
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Categoría</label>
+                <select asp-for="CategoryId" class="ft-input" asp-items="ViewBag.Categories">
+                    <option value="">Selecciona una categoría</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-xs text-red-200"></span>
+            </div>
+
+            <div class="ft-divider pt-5"></div>
+
+            <div class="flex items-center justify-end gap-2">
+                <a asp-action="Index" class="ft-btn-secondary">Cancelar</a>
+                <button type="submit" class="ft-btn-primary px-5">Guardar</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

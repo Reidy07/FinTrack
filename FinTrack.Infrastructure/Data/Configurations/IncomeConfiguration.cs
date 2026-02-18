@@ -1,4 +1,5 @@
 ﻿using FinTrack.Core.Entities;
+using FinTrack.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -31,11 +32,11 @@ namespace FinTrack.Infrastructure.Data.Configurations
                 .HasDatabaseName("IX_Incomes_CategoryId");
 
             // Relaciones
-            builder.HasOne<Core.Entities.User>()
+            builder.HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(i => i.UserId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_Incomes_AspNetUsers_UserId");
+                .OnDelete(DeleteBehavior.Cascade);
+
 
             builder.HasOne(i => i.Category)
                 .WithMany(c => c.Incomes)

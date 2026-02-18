@@ -1,49 +1,43 @@
-﻿<!-- Views/Shared/_Sidebar.cshtml -->
-<ul class="nav flex-column gap-1">
+﻿@{
+    var c = ViewContext.RouteData.Values["Controller"]?.ToString();
 
-    <li class="nav-item">
-        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")"
-           asp-controller="Dashboard" asp-action="Index">
-            <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
-        </a>
-    </li>
+    Func<string, string> link = (name) =>
+        "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition " +
+        (c == name
+            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/15"
+            : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent");
+}
 
-    <li class="nav-item">
-        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Expense" ? "active" : "")"
-           asp-controller="Expense" asp-action="Index">
-            <i class="bi bi-wallet2"></i> <span>Gastos</span>
-        </a>
-    </li>
+<nav class="space-y-2">
+    <a class="@link("Dashboard")" asp-controller="Dashboard" asp-action="Index">
+        <i class="bi bi-grid-1x2 text-base"></i><span>Dashboard</span>
+    </a>
 
-    <li class="nav-item">
-        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Income" ? "active" : "")"
-           asp-controller="Income" asp-action="Index">
-            <i class="bi bi-graph-up-arrow"></i> <span>Ingresos</span>
-        </a>
-    </li>
+    <a class="@link("Expense")" asp-controller="Expense" asp-action="Index">
+        <i class="bi bi-wallet2 text-base"></i><span>Gastos</span>
+    </a>
 
-    <li class="nav-item">
-        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Category" ? "active" : "")"
-           asp-controller="Category" asp-action="Index">
-            <i class="bi bi-folder"></i> <span>Categorías</span>
-        </a>
-    </li>
+    <a class="@link("Income")" asp-controller="Income" asp-action="Index">
+        <i class="bi bi-graph-up-arrow text-base"></i><span>Ingresos</span>
+    </a>
 
-    <li class="nav-item">
-        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")"
-           asp-controller="Reports" asp-action="Index">
-            <i class="bi bi-file-earmark-text"></i> <span>Reportes</span>
-        </a>
-    </li>
+    <a class="@link("Category")" asp-controller="Category" asp-action="Index">
+        <i class="bi bi-folder text-base"></i><span>Categorías</span>
+    </a>
 
-    <li class="nav-item mt-3">
-        <small class="text-muted text-uppercase px-3" style="font-size: 0.7rem; letter-spacing: 1px;">Inteligencia</small>
-    </li>
+    <a class="@link("Reports")" asp-controller="Reports" asp-action="Index">
+        <i class="bi bi-file-earmark-text text-base"></i><span>Reportes</span>
+    </a>
 
-    <li class="nav-item">
-        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Predictions" ? "active" : "")"
-           asp-controller="Predictions" asp-action="Index">
-            <i class="bi bi-stars text-primary"></i> <span>Predicciones IA</span>
-        </a>
-    </li>
-</ul>
+    <div class="pt-6">
+        <div class="px-2 text-[11px] uppercase tracking-[0.22em] text-white/35">Inteligencia</div>
+    </div>
+
+    <a class="@link("Predictions")" asp-controller="Predictions" asp-action="Index">
+        <i class="bi bi-stars text-emerald-300 text-base"></i><span>Predicciones IA</span>
+    </a>
+
+    <a class="@link("Alerts")" asp-controller="Alerts" asp-action="Index">
+        <i class="bi bi-bell text-base"></i><span>Alertas</span>
+    </a>
+</nav>

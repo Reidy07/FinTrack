@@ -3,6 +3,8 @@ using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using FinTrack.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace FinTrack.Web.Controllers
 {
@@ -10,35 +12,63 @@ namespace FinTrack.Web.Controllers
     public class CategoryController : Controller
     {
         private readonly IFinancialService _financialService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CategoryController(IFinancialService financialService)
+        public CategoryController(IFinancialService financialService, UserManager<ApplicationUser> userManager)
         {
             _financialService = financialService;
+            _userManager = userManager;
         }
+
+        private string? UserId() => _userManager.GetUserId(User);
 
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+
             var categories = await _financialService.GetCategoriesByUserAsync(userId);
             return View(categories);
-        }
-
-        public IActionResult Create()
-        {
-            return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CategoryDto dto)
         {
-            if (ModelState.IsValid)
+            var userId = UserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+            if (!ModelState.IsValid)
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                await _financialService.AddCategoryAsync(dto, userId);
-                return RedirectToAction(nameof(Index));
+                var categories = await _financialService.GetCategoriesByUserAsync(userId);
+                return View("Index", categories);
             }
-            return View(dto);
+
+            await _financialService.AddCategoryAsync(dto, userId);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(CategoryDto dto)
+        {
+            var userId = UserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+            await _financialService.UpdateCategoryAsync(dto, userId);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = UserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+            await _financialService.DeleteCategoryAsync(id, userId);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

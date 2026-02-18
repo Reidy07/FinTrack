@@ -1,0 +1,169 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        @apply h-full;
+    }
+
+    body {
+        @apply bg-[#070A12] text-white min-h-full antialiased;
+        ;
+        background-image: radial-gradient(900px 500px at 18% 10%, rgba(16,185,129,0.14), transparent 60%), radial-gradient(900px 500px at 82% 22%, rgba(59,130,246,0.10), transparent 55%), radial-gradient(1100px 650px at 55% 85%, rgba(168,85,247,0.08), transparent 60%);
+    }
+}
+
+@layer components {
+
+    .ft-page {
+        @apply space-y-6;
+    }
+
+    .ft-header {
+        @apply flex items-start justify-between gap-4;
+    }
+
+    .ft-header-title {
+        @apply text-2xl font-semibold tracking-tight;
+    }
+
+    .ft-header-sub {
+        @apply text-sm text-white/55;
+    }
+
+    .ft-grid-3 {
+        @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+    }
+
+    .ft-grid-12 {
+        @apply grid grid-cols-1 lg:grid-cols-12 gap-4;
+    }
+
+    .ft-stat {
+        @apply ft-surface p-5;
+    }
+
+    .ft-stat-top {
+        @apply flex items-start justify-between;
+    }
+
+    .ft-stat-label {
+        @apply text-sm text-white/60;
+    }
+
+    .ft-stat-value {
+        @apply mt-2 text-3xl font-semibold;
+    }
+
+    .ft-stat-chip {
+        @apply h-10 w-10 rounded-xl flex items-center justify-center bg-white/5 border border-white/10;
+    }
+
+    .ft-section {
+        @apply ft-surface p-6;
+    }
+
+    .ft-section-title {
+        @apply text-lg font-semibold;
+    }
+
+    .ft-section-sub {
+        @apply text-sm text-white/55;
+    }
+
+    .ft-surface {
+        @apply bg-white/[0.04] border border-white/10 rounded-2xl;
+        backdrop-filter: blur(12px);
+    }
+
+    .ft-card {
+        @apply ft-surface;
+    }
+
+    .ft-title {
+        @apply text-2xl font-semibold tracking-tight;
+    }
+
+    .ft-subtitle {
+        @apply text-sm text-white/55;
+    }
+
+    .ft-btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition;
+    }
+
+    .ft-btn-primary {
+        @apply ft-btn bg-emerald-400 text-black hover:bg-emerald-300;
+    }
+
+    .ft-btn-ghost {
+        @apply ft-btn bg-white/5 hover:bg-white/10 border border-white/10;
+    }
+
+    .ft-input {
+        @apply w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400/25 focus:border-emerald-400/40;
+        backdrop-filter: blur(10px);
+    }
+
+    .ft-container {
+        @apply mx-auto w-full max-w-[1200px];
+    }
+
+    .ft-main-pad {
+        @apply p-4 sm:p-6 lg:p-8;
+    }
+
+    .ft-panel-pad {
+        @apply p-4 sm:p-6;
+    }
+
+    .ft-kpi {
+        @apply ft-surface ft-panel-pad;
+    }
+
+    .ft-kpi-title {
+        @apply text-sm text-white/60;
+    }
+
+    .ft-kpi-value {
+        @apply mt-2 text-3xl font-semibold tracking-tight;
+    }
+
+    .ft-btn-secondary {
+        @apply ft-btn bg-white/10 hover:bg-white/15 border border-white/10;
+    }
+
+    .ft-badge {
+        @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs border border-white/10 bg-white/5 text-white/80;
+    }
+
+    .ft-badge-dot {
+        @apply h-1.5 w-1.5 rounded-full bg-emerald-400;
+    }
+
+    .ft-divider {
+        @apply border-t border-white/10;
+    }
+
+    .ft-empty {
+        @apply ft-surface p-8 text-center;
+    }
+
+    .ft-empty-title {
+        @apply text-lg font-semibold;
+    }
+
+    .ft-empty-sub {
+        @apply mt-1 text-sm text-white/55;
+    }
+
+    .ft-modal-backdrop {
+        @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+    }
+
+    .ft-modal {
+        @apply ft-surface w-full max-w-lg p-6;
+    }
+
+}

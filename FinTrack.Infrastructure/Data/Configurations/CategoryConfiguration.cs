@@ -1,4 +1,5 @@
 ﻿using FinTrack.Core.Entities;
+using FinTrack.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -29,6 +30,8 @@ namespace FinTrack.Infrastructure.Data.Configurations
                 .HasMaxLength(20)
                 .IsRequired();
 
+            builder.Property(c => c.UserId).IsRequired();
+
             // Índice compuesto para búsquedas rápidas
             builder.HasIndex(c => new { c.UserId, c.Type })
                 .HasDatabaseName("IX_Categories_UserId_Type");
@@ -36,12 +39,14 @@ namespace FinTrack.Infrastructure.Data.Configurations
             builder.HasIndex(c => c.Name)
                 .HasDatabaseName("IX_Categories_Name");
 
-            // Relación con User
-            builder.HasOne<Core.Entities.User>()
+
+            // Relación correcta con Identity (AspNetUsers) usando ApplicationUser
+            builder.HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Categories_AspNetUsers_UserId");
+
 
             // Restricción: Nombre único por usuario
             builder.HasIndex(c => new { c.UserId, c.Name })

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FinTrack.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,22 +54,6 @@ namespace FinTrack.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "User",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_User", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -86,6 +70,33 @@ namespace FinTrack.Infrastructure.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Alerts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Severity = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RelatedEntityId = table.Column<int>(type: "int", nullable: true),
+                    RelatedEntityType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Alerts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Alerts_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -176,40 +187,6 @@ namespace FinTrack.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Alerts",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Severity = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RelatedEntityId = table.Column<int>(type: "int", nullable: true),
-                    RelatedEntityType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Alerts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Alerts_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Alerts_User_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Categories",
                 columns: table => new
                 {
@@ -219,8 +196,7 @@ namespace FinTrack.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false, defaultValue: "#3498db"),
                     Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -228,13 +204,7 @@ namespace FinTrack.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_Categories_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Categories_User_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "User",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -250,8 +220,7 @@ namespace FinTrack.Infrastructure.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -261,19 +230,13 @@ namespace FinTrack.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_Budgets_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "User",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Budgets_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Budgets_User_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -290,20 +253,13 @@ namespace FinTrack.Infrastructure.Migrations
                     IsRecurring = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     RecurringPattern = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Expenses", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Expenses_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Expenses_AspNetUsers_UserId1",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -312,12 +268,6 @@ namespace FinTrack.Infrastructure.Migrations
                         name: "FK_Expenses_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Expenses_User_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -332,20 +282,13 @@ namespace FinTrack.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Incomes", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Incomes_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Incomes_AspNetUsers_UserId1",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -354,12 +297,6 @@ namespace FinTrack.Infrastructure.Migrations
                         name: "FK_Incomes_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Incomes_User_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -375,8 +312,7 @@ namespace FinTrack.Infrastructure.Migrations
                     PredictedAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Confidence = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -384,19 +320,13 @@ namespace FinTrack.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_Predictions_AspNetUsers_UserId",
                         column: x => x.UserId,
-                        principalTable: "User",
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Predictions_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Predictions_User_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -410,11 +340,6 @@ namespace FinTrack.Infrastructure.Migrations
                 name: "IX_Alerts_UserId_IsRead_CreatedAt",
                 table: "Alerts",
                 columns: new[] { "UserId", "IsRead", "CreatedAt" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Alerts_UserId1",
-                table: "Alerts",
-                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -471,11 +396,6 @@ namespace FinTrack.Infrastructure.Migrations
                 columns: new[] { "UserId", "StartDate", "EndDate" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Budgets_UserId1",
-                table: "Budgets",
-                column: "UserId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Categories_Name",
                 table: "Categories",
                 column: "Name");
@@ -484,11 +404,6 @@ namespace FinTrack.Infrastructure.Migrations
                 name: "IX_Categories_UserId_Type",
                 table: "Categories",
                 columns: new[] { "UserId", "Type" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Categories_UserId1",
-                table: "Categories",
-                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "UK_Categories_UserId_Name",
@@ -507,11 +422,6 @@ namespace FinTrack.Infrastructure.Migrations
                 columns: new[] { "UserId", "Date" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Expenses_UserId1",
-                table: "Expenses",
-                column: "UserId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Incomes_CategoryId",
                 table: "Incomes",
                 column: "CategoryId");
@@ -520,11 +430,6 @@ namespace FinTrack.Infrastructure.Migrations
                 name: "IX_Incomes_UserId_Date",
                 table: "Incomes",
                 columns: new[] { "UserId", "Date" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Incomes_UserId1",
-                table: "Incomes",
-                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Predictions_CategoryId",
@@ -540,11 +445,6 @@ namespace FinTrack.Infrastructure.Migrations
                 name: "IX_Predictions_UserId_PredictionDate",
                 table: "Predictions",
                 columns: new[] { "UserId", "PredictionDate" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Predictions_UserId1",
-                table: "Predictions",
-                column: "UserId1");
         }
 
         /// <inheritdoc />
@@ -584,13 +484,10 @@ namespace FinTrack.Infrastructure.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
                 name: "Categories");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "AspNetUsers");
         }
     }
 }

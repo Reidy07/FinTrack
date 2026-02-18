@@ -7,6 +7,7 @@ using FinTrack.Core.Interfaces.Services;
 using FinTrack.Core.Services;
 using FinTrack.Infrastructure.Extensions;
 using FinTrack.Infrastructure.Services;
+using System.Globalization;
 
 namespace FinTrack.Web
 {
@@ -15,6 +16,11 @@ namespace FinTrack.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var culture = new CultureInfo("en-US"); // Usa $ como símbolo
+            culture.NumberFormat.CurrencySymbol = "$";
+
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
 
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
@@ -34,6 +40,7 @@ namespace FinTrack.Web
             // Add services for controllers and views
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
+            builder.Services.AddScoped<IFinancialService, FinancialService>();
 
 
 

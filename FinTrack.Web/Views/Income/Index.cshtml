@@ -1,11 +1,206 @@
-﻿@{
-    ViewData["Title"] = "Income";
+﻿@model IEnumerable<FinTrack.Core.DTOs.IncomeDto>
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Ingresos";
+    var total = Model?.Sum(x => x.Amount) ?? 0m;
 }
 
-<div class="card p-3">
-    <h5 class="mb-1">Ingresos</h5>
-    <p class="text-muted mb-0">Pantalla base (UI en construcción).</p>
-    <p class="text-muted mb-0">El Usuario podrá definir sus ingresos y fechas en la que optiene ganancias para optener la data predictiva con respecto a los gastos</p>
-    <p class="text-muted mb-0">Ingresos fijos al mes, ingresos fijos semanales y posibles ingresos diarios (Extras). Cada campo debe estar definido entre ganancia y tiempo</p>
+<div class="ft-page">
+    <div class="ft-header">
+        <div>
+            <div class="ft-header-title">Ingresos</div>
+            <div class="ft-header-sub">Gestiona tus ingresos (salario, freelance, ventas, etc.)</div>
+        </div>
+
+        <button type="button" class="ft-btn-primary" data-modal-open="newIncomeModal">
+            <i class="bi bi-plus-lg"></i>
+            Nuevo ingreso
+        </button>
+    </div>
+
+    <section class="ft-section">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+            <div class="lg:col-span-3">
+                <div class="text-sm text-white/55">Total ingresos</div>
+                <div class="mt-1 text-3xl font-semibold tracking-tight">@total.ToString("C")</div>
+            </div>
+
+            <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="md:col-span-2">
+                    <input id="searchInput" class="ft-input" type="text"
+                           placeholder="Buscar ingresos por descripción o categoría..." />
+                </div>
+
+                <select id="categoryFilter" class="ft-input">
+                    <option value="">Todas las categorías</option>
+                    @if (ViewBag.Categories is IEnumerable<SelectListItem> items)
+                    {
+                        foreach (var c in items)
+                        {
+                            <option value="@c.Text">@c.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <section class="ft-section overflow-hidden">
+        @if (Model != null && Model.Any())
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-white/60 border-b border-white/10">
+                            <th class="text-left font-medium py-3 pr-4">Descripción</th>
+                            <th class="text-left font-medium py-3 pr-4">Categoría</th>
+                            <th class="text-left font-medium py-3 pr-4">Fecha</th>
+                            <th class="text-right font-medium py-3 pl-4">Monto</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="incomeTbody" class="divide-y divide-white/10">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-white/[0.03] transition"
+                                data-desc="@item.Description"
+                                data-cat="@item.CategoryName">
+                                <td class="py-4 pr-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                            <i class="bi bi-cash-coin text-emerald-300"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="font-semibold text-white truncate">@item.Description</div>
+                                            <div class="text-xs text-white/45">Ingreso</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="py-4 pr-4">
+                                    <span class="ft-badge">
+                                        <span class="ft-badge-dot"></span>
+                                        @item.CategoryName
+                                    </span>
+                                </td>
+
+                                <td class="py-4 pr-4 text-white/70">
+                                    @item.Date.ToString("dd 'de' MMMM, yyyy")
+                                </td>
+
+                                <td class="py-4 pl-4 text-right font-semibold text-white">
+                                    +@item.Amount.ToString("C")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="ft-empty">
+                <div class="mx-auto h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-content-center">
+                    <i class="bi bi-inbox text-xl text-white/70"></i>
+                </div>
+                <div class="ft-empty-title mt-4">No hay ingresos registrados</div>
+                <div class="ft-empty-sub">Crea tu primer ingreso para ver tu balance y reportes.</div>
+
+                <div class="mt-6">
+                    <button type="button" class="ft-btn-primary" data-modal-open="newIncomeModal">
+                        <i class="bi bi-plus-lg"></i>
+                        Nuevo ingreso
+                    </button>
+                </div>
+            </div>
+        }
+    </section>
 </div>
 
+<!-- MODAL: Nuevo Ingreso -->
+<div id="newIncomeModal" class="hidden ft-modal-backdrop" aria-hidden="true">
+    <div class="ft-modal">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="text-lg font-semibold">Nuevo ingreso</div>
+                <div class="text-sm text-white/55">Registra un ingreso y asígnalo a una categoría.</div>
+            </div>
+
+            <button type="button" class="ft-btn-ghost px-3 py-2" data-modal-close="newIncomeModal" aria-label="Cerrar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="ft-divider my-5"></div>
+
+        <form asp-action="Create" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Monto</label>
+                    <input type="number" step="0.01" name="Amount" class="ft-input" placeholder="0.00" required />
+                </div>
+
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">Fecha</label>
+                    <input type="date" name="Date" class="ft-input" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Descripción</label>
+                <input type="text" name="Description" class="ft-input" placeholder="Ej: Salario, Freelance..." required />
+            </div>
+
+            <div>
+                <label class="block text-sm text-white/60 mb-2">Categoría</label>
+                <select name="CategoryId" class="ft-input" required>
+                    <option value="">Selecciona una categoría</option>
+                    @if (ViewBag.Categories is IEnumerable<SelectListItem> cats)
+                    {
+                        foreach (var c in cats)
+                        {
+                            <option value="@c.Value">@c.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="ft-divider pt-5"></div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" class="ft-btn-secondary" data-modal-close="newIncomeModal">Cancelar</button>
+                <button type="submit" class="ft-btn-primary px-5">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const q = document.getElementById('searchInput');
+            const cat = document.getElementById('categoryFilter');
+            const tbody = document.getElementById('incomeTbody');
+            if (!tbody) return;
+
+            const apply = () => {
+                const query = (q?.value || '').toLowerCase().trim();
+                const catVal = (cat?.value || '').toLowerCase().trim();
+
+                [...tbody.querySelectorAll('tr')].forEach(tr => {
+                    const d = (tr.getAttribute('data-desc') || '').toLowerCase();
+                    const c = (tr.getAttribute('data-cat') || '').toLowerCase();
+                    const okQ = !query || d.includes(query) || c.includes(query);
+                    const okC = !catVal || c === catVal;
+                    tr.style.display = (okQ && okC) ? '' : 'none';
+                });
+            };
+
+            q?.addEventListener('input', apply);
+            cat?.addEventListener('change', apply);
+        })();
+    </script>
+}
