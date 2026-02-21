@@ -59,6 +59,10 @@ namespace FinTrack.Web.Controllers
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Challenge();
 
+            // NO MUEVAN ESTO O DEJA DE GUARDAR, THANKS
+            ModelState.Remove(nameof(dto.UserId));
+            ModelState.Remove(nameof(dto.CategoryName));
+
             if (!ModelState.IsValid)
             {
                 await LoadExpenseCategoriesAsync(userId);
@@ -87,6 +91,11 @@ namespace FinTrack.Web.Controllers
         {
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+
+            // NO MUEVAN ESTO O DEJA DE GUARDAR, THANKS
+            ModelState.Remove(nameof(dto.UserId));
+            ModelState.Remove(nameof(dto.CategoryName));
 
             if (!ModelState.IsValid)
             {
