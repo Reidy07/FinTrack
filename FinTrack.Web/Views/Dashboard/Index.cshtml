@@ -1,8 +1,16 @@
-﻿@model FinTrack.Core.DTOs.DashboardSummaryDto
+﻿﻿@using Microsoft.AspNetCore.Identity
+@using FinTrack.Infrastructure.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@model FinTrack.Core.DTOs.DashboardSummaryDto
 @using System.Text.Json
 @{
     ViewData["Title"] = "Dashboard";
-    var userName = User?.Identity?.Name ?? "Usuario";
+
+    // Para obtener el nombre del usuario:
+    var user = await UserManager.GetUserAsync(User);
+    var firstName = user?.FirstName ?? User.Identity.Name;
 
     var labelsJson = JsonSerializer.Serialize(Model?.ChartLabels ?? new List<string>());
     var incomeJson = JsonSerializer.Serialize(Model?.ChartIncomeData ?? new List<decimal>());
@@ -12,7 +20,7 @@
 <div class="ft-page">
     <div class="ft-header">
         <div>
-            <div class="ft-header-title">Bienvenido, @userName</div>
+            <div class="ft-header-title">¡Bienvenido, @firstName!</div>
             <div class="ft-header-sub">@DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy")</div>
         </div>
     </div>

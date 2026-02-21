@@ -24,20 +24,23 @@
         <div class="mt-6">
             <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="space-y-4">
                 <div asp-validation-summary="ModelOnly" class="text-sm text-red-200"></div>
+                <div>
+                    <label asp-for="Input.FirstName" class="block text-sm text-white/60 mb-2">Nombre</label>
+                    <input asp-for="Input.FirstName" class="ft-input w-full" autocomplete="Nombre" />
+                    <span asp-validation-for="Input.FirstName" class="text-xs text-red-200"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.LastName" class="block text-sm text-white/60 mb-2">Apellido</label>
+                    <input asp-for="Input.LastName" class="ft-input w-full" autocomplete="Apellido" />
+                    <span asp-validation-for="Input.LastName" class="text-xs text-red-200"></span>
+                </div>
 
                 <div>
                     <label asp-for="Input.Email" class="block text-sm text-white/60 mb-2">Email</label>
                     <input asp-for="Input.Email" class="ft-input w-full" autocomplete="username" />
                     <span asp-validation-for="Input.Email" class="text-xs text-red-200"></span>
                 </div>
-
-                @* Si tu modelo tiene Username, puedes habilitar esto:
-                <div>
-                    <label asp-for="Input.Username" class="block text-sm text-white/60 mb-2">Usuario</label>
-                    <input asp-for="Input.Username" class="ft-input w-full" autocomplete="username" />
-                    <span asp-validation-for="Input.Username" class="text-xs text-red-200"></span>
-                </div>
-                *@
 
                 <div>
                     <label asp-for="Input.Password" class="block text-sm text-white/60 mb-2">Contraseña</label>
