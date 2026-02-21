@@ -16,7 +16,7 @@ namespace FinTrack.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var culture = new CultureInfo("en-US"); // Usa $ como símbolo
+            var culture = new CultureInfo("en-US"); // Usa $ como sÃ­mbolo
             culture.NumberFormat.CurrencySymbol = "$";
 
             CultureInfo.DefaultThreadCurrentCulture = culture;
