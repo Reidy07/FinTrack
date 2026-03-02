@@ -141,9 +141,11 @@
         <p class="text-sm text-white/50 mb-6">Todos tus datos se almacenan localmente. Puedes exportarlos o eliminarlos permanentemente.</p>
         
         <div class="flex gap-4">
-            <form id="download-data" asp-page="DownloadPersonalData" method="post" class="flex-1">
-                <button class="ft-btn-secondary w-full" type="submit">Exportar datos</button>
-            </form>
+            <a asp-controller="Reports"
+               asp-action="ExportPdf"
+               class="ft-btn-secondary w-full text-center flex-1 flex items-center justify-center">
+                Exportar datos
+            </a>>
             <a asp-page="DeletePersonalData" class="ft-btn bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 flex-1">
                 Eliminar cuenta
             </a>
