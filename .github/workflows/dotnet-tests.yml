@@ -1,32 +1,11 @@
-name: .NET CI
+- name: Publish Web
+  run: dotnet publish FinTrack.Web/FinTrack.Web.csproj -c Release -o publish/Web
 
-on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
+- name: Publish API
+  run: dotnet publish FinTrack.API/FinTrack.API.csproj -c Release -o publish/API
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+- name: Publish Core
+  run: dotnet publish FinTrack.Core/FinTrack.Core.csproj -c Release -o publish/Core
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release
-
-      - name: Test
-        run: dotnet test --configuration Release --verbosity normal
+- name: Publish Infrastructure
+  run: dotnet publish FinTrack.Infrastructure/FinTrack.Infrastructure.csproj -c Release -o publish/Infrastructure
