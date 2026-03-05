@@ -1,4 +1,4 @@
-﻿using FinTrack.Core.Interfaces.Services;
+﻿using FinTrack.Core.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -8,25 +8,22 @@ namespace FinTrack.Web.Controllers
     [Authorize]
     public class DashboardController : Controller
     {
-        private readonly IFinancialService _financialService;
-        private readonly IPredictionService _predictionService;
+        private readonly HttpClient _httpClient;
 
-        public DashboardController(IFinancialService financialService, IPredictionService predictionService)
+        public DashboardController(IHttpClientFactory httpClientFactory)
         {
-            _financialService = financialService;
-            _predictionService = predictionService;
+            _httpClient = httpClientFactory.CreateClient("FinTrackAPI");
         }
 
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
 
-            // 1. Obtener datos reales
-            var summary = await _financialService.GetDashboardSummaryAsync(userId, DateTime.Now);
+            // 1. Obtener datos desde la API
+            var summary = await _httpClient.GetFromJsonAsync<DashboardSummaryDto>($"api/dashboard/summary?userId={userId}");
 
-            // 2. Obtener predicción
-            var prediction = await _predictionService.PredictNextMonthExpensesAsync(userId);
+            // 2. Obtener predicción desde la API
+            var prediction = await _httpClient.GetFromJsonAsync<decimal>($"api/dashboard/prediction?userId={userId}");
 
             ViewBag.Prediction = prediction;
 

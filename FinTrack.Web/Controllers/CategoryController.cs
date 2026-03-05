@@ -1,34 +1,26 @@
 ﻿using FinTrack.Core.DTOs;
-using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using FinTrack.Infrastructure.Identity;
-using Microsoft.AspNetCore.Identity;
 
 namespace FinTrack.Web.Controllers
 {
     [Authorize]
     public class CategoryController : Controller
     {
-        private readonly IFinancialService _financialService;
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly HttpClient _httpClient;
 
-        public CategoryController(IFinancialService financialService, UserManager<ApplicationUser> userManager)
+        public CategoryController(IHttpClientFactory httpClientFactory)
         {
-            _financialService = financialService;
-            _userManager = userManager;
+            _httpClient = httpClientFactory.CreateClient("FinTrackAPI");
         }
 
-        private string? UserId() => _userManager.GetUserId(User);
+        private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
-
-
-            var categories = await _financialService.GetCategoriesByUserAsync(userId);
+            var userId = GetUserId();
+            var categories = await _httpClient.GetFromJsonAsync<IEnumerable<CategoryDto>>($"api/categories/user/{userId}");
             return View(categories);
         }
 
@@ -36,16 +28,32 @@ namespace FinTrack.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CategoryDto dto)
         {
-            var userId = UserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+            var userId = GetUserId();
+
+            dto.Description ??= string.Empty; // Si viene nulo, lo hace un texto vacío ""
+            dto.Color = string.IsNullOrWhiteSpace(dto.Color) ? "#3498db" : dto.Color;
+
+            ModelState.Remove(nameof(dto.Description));
+            ModelState.Remove(nameof(dto.Color));
 
             if (!ModelState.IsValid)
             {
-                var categories = await _financialService.GetCategoriesByUserAsync(userId);
-                return View("Index", categories);
+                TempData["Error"] = "Faltan datos obligatorios (Nombre o Tipo).";
+                return RedirectToAction(nameof(Index));
             }
 
-            await _financialService.AddCategoryAsync(dto, userId);
+            var response = await _httpClient.PostAsJsonAsync($"api/categories?userId={userId}", dto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = "Categoría creada correctamente.";
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["Error"] = $"Error al crear: {error}";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -53,10 +61,21 @@ namespace FinTrack.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CategoryDto dto)
         {
-            var userId = UserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+            var userId = GetUserId();
 
-            await _financialService.UpdateCategoryAsync(dto, userId);
+            dto.Description ??= string.Empty;
+            dto.Color = string.IsNullOrWhiteSpace(dto.Color) ? "#3498db" : dto.Color;
+
+            ModelState.Remove(nameof(dto.Description));
+            ModelState.Remove(nameof(dto.Color));
+
+            var response = await _httpClient.PutAsJsonAsync($"api/categories/{dto.Id}?userId={userId}", dto);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = "No se pudo actualizar la categoría.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -64,10 +83,8 @@ namespace FinTrack.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var userId = UserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
-
-            await _financialService.DeleteCategoryAsync(id, userId);
+            var userId = GetUserId();
+            await _httpClient.DeleteAsync($"api/categories/{id}?userId={userId}");
             return RedirectToAction(nameof(Index));
         }
     }

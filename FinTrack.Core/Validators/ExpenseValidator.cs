@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace FinTrack.Core.Validators
 {
-    public class ExpenseValidator: AbstractValidator<Expense>
+    public class ExpenseValidator : AbstractValidator<Expense>
     {
         public ExpenseValidator()
         {

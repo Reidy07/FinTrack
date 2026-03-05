@@ -16,21 +16,17 @@ namespace FinTrack.Infrastructure.Extensions
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            // 1. Configurar DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly("FinTrack.Infrastructure")));
 
-            // 2. Registrar UnitOfWork
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-            // 3. Registrar Repositorios individuales
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
-
-            // 4. Registrar Servicios de Dominio
             services.AddScoped<IFinancialService, FinancialService>();
             services.AddScoped<IPredictionService, PredictionService>();
+            services.AddScoped<IReportService, ReportService>();
+            services.AddScoped<IGeminiPredictionService, GeminiPredictionService>();
 
             return services;
         }

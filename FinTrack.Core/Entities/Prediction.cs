@@ -8,16 +8,16 @@
         public decimal PredictedAmount { get; set; }
         public decimal Confidence { get; set; }  // 0-100% de confianza
 
-       
+
         // Para qué categoría se predice (puede ser null para predicción general)
         public int? CategoryId { get; set; }
 
-        
+
         // Foreign Keys
         public string UserId { get; set; } = null!;
 
 
         // Navigation
-        public Category? Category { get; set; } 
+        public Category? Category { get; set; }
     }
 }

@@ -57,6 +57,7 @@
                             <th class="text-left font-medium py-3 pr-4">Categoría</th>
                             <th class="text-left font-medium py-3 pr-4">Fecha</th>
                             <th class="text-right font-medium py-3 pl-4">Monto</th>
+                            <th class="text-right font-medium py-3 pl-4">Acciones</th> <!-- NUEVA COLUMNA -->
                         </tr>
                     </thead>
 
@@ -86,11 +87,28 @@
                                 </td>
 
                                 <td class="py-4 pr-4 text-white/70">
-                                    @item.Date.ToString("dd 'de' MMMM, yyyy")
+                                    <!-- FORMATO DE FECHA IGUAL AL DE GASTOS -->
+                                    @item.Date.ToString("dd MMM, yyyy")
                                 </td>
 
                                 <td class="py-4 pl-4 text-right font-semibold text-white">
                                     +@item.Amount.ToString("C")
+                                </td>
+
+                                <!-- NUEVA COLUMNA DE BOTONES (Igual a la de Gastos) -->
+                                <td class="py-4 pl-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a class="ft-btn-ghost px-3 py-2 text-sm" asp-action="Edit" asp-route-id="@item.Id" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('¿Eliminar este ingreso?');" class="m-0 p-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }

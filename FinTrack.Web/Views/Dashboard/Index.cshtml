@@ -21,7 +21,7 @@
     <div class="ft-header">
         <div>
             <div class="ft-header-title">¡Bienvenido, @firstName!</div>
-            <div class="ft-header-sub">@DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy")</div>
+            <div class="ft-header-sub">@DateTime.Now.ToString("dddd, dd 'of' MMM 'of' yyyy")</div>
         </div>
     </div>
 
@@ -49,9 +49,9 @@
 <script id="dashboard-chart-data" type="application/json">
     @Html.Raw(JsonSerializer.Serialize(new {
         labels = Model?.ChartLabels ?? new List<string>(),
-                income = Model?.ChartIncomeData ?? new List<decimal>(),
-                expense = Model?.ChartExpenseData ?? new List<decimal>()
-        }))
+                                income = Model?.ChartIncomeData ?? new List<decimal>(),
+                                expense = Model?.ChartExpenseData ?? new List<decimal>()
+                }))
 </script>
 @section Scripts {
     <script>

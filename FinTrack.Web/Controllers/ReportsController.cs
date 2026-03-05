@@ -62,12 +62,12 @@ namespace FinTrack.Web.Controllers
                            .SemiBold();
                     });
 
-                   
+
                     page.Content().Column(col =>
                     {
                         col.Spacing(20);
 
-                        
+
                         col.Item().Row(row =>
                         {
                             row.Spacing(15);

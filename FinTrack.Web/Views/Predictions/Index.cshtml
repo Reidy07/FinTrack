@@ -1,16 +1,657 @@
 ﻿@{
-    ViewData["Title"] = "Predictions";
+    ViewData["Title"] = "Predicciones IA";
 }
 
-<div class="card p-3">
-    <h5 class="mb-1">Predicciones</h5>
-    <p class="text-muted mb-0">Pantalla base (UI en construcción).</p>
-    <p class="text-muted mb-0">El Usuario podrá ajustar la IA con el peso de cada prioridad tomando en cuenta los puntos de ingresos y gastos debe poder dejarle claro a la IA sus prioridades</p>
-    <p class="text-muted mb-0"> Asi poder darle mejores recomendaciones de manejo y consejos para distribuir el peso de responsabilidades de manera ajustable a su situacion financiera</p>
-    <p class="text-muted mb-0">Fechas de pago sobre responsabilidades</p>
-    <p class="text-muted mb-0">Recomendacion de gastos minimos</p>
-    <p class="text-muted mb-0">Cuantos quedan libres para gastar en gustos</p>
-    <p class="text-muted mb-0">Si define un plan de ahorro o metas poder sacarle un porciento % adaptado a su condición</p>
-    <p class="text-muted mb-0">Estaremos buscando la escalabilidad y metodos de implementar las mejores logica para poder ayudar a nuestros usuarios a no caer en problemas financieros... aun no somos capaz de saber el potencial de la IA que implementaremos.</p>
+<style>
+    @@keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+        }
+
+        50% {
+            box-shadow: 0 0 40px rgba(52, 211, 153, 0.35);
+        }
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-6px);
+        }
+    }
+
+    @@keyframes scan-line {
+        0% {
+            top: 0%;
+            opacity: 1;
+        }
+
+        100% {
+            top: 100%;
+            opacity: 0;
+        }
+    }
+
+    @@keyframes counter-up {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes bar-fill {
+        from {
+            width: 0%;
+        }
+    }
+
+    @@keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -200% center;
+        }
+
+        100% {
+            background-position: 200% center;
+        }
+    }
+
+    @@keyframes rotate-ring {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .ai-header {
+        background: linear-gradient(135deg, rgba(6,78,59,0.3) 0%, rgba(4,47,46,0.2) 50%, rgba(7,10,18,0) 100%);
+        border: 1px solid rgba(52,211,153,0.2);
+        border-radius: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .ai-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 10% 50%, rgba(52,211,153,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+    .scan-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .scan-container::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(52,211,153,0.6), transparent);
+            animation: scan-line 3s linear infinite;
+        }
+
+    .metric-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 0.875rem;
+        padding: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+        .metric-card:hover {
+            border-color: rgba(52,211,153,0.3);
+            background: rgba(52,211,153,0.04);
+            transform: translateY(-2px);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(52,211,153,0.4), transparent);
+        }
+
+    .priority-check-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.875rem;
+        border-radius: 0.625rem;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.02);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+        .priority-check-item:hover {
+            border-color: rgba(52,211,153,0.25);
+            background: rgba(52,211,153,0.05);
+        }
+
+        .priority-check-item.active {
+            border-color: rgba(52,211,153,0.4);
+            background: rgba(52,211,153,0.08);
+        }
+
+        .priority-check-item input[type=checkbox] {
+            accent-color: #34d399;
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+    .analyze-btn {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        background: linear-gradient(135deg, #059669, #047857);
+        border: none;
+        border-radius: 0.75rem;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+        .analyze-btn:hover {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(5,150,105,0.4);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            animation: none;
+        }
+
+    .health-badge-good {
+        background: rgba(52,211,153,0.15);
+        color: #34d399;
+        border: 1px solid rgba(52,211,153,0.3);
+    }
+
+    .health-badge-warning {
+        background: rgba(251,191,36,0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251,191,36,0.3);
+    }
+
+    .health-badge-critical {
+        background: rgba(248,113,113,0.15);
+        color: #f87171;
+        border: 1px solid rgba(248,113,113,0.3);
+    }
+
+    .result-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .result-card-header {
+        padding: 0.875rem 1.25rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+    }
+
+    .progress-track {
+        height: 6px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 99px;
+        overflow: hidden;
+        margin: 0.375rem 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 99px;
+        animation: bar-fill 1s ease forwards;
+    }
+
+    .rec-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+        .rec-item:last-child {
+            border-bottom: none;
+        }
+
+    .rec-number {
+        min-width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(52,211,153,0.15);
+        color: #34d399;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .reminder-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+        .reminder-row:last-child {
+            border-bottom: none;
+        }
+
+    .amount-chip {
+        padding: 0.2rem 0.625rem;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .loading-ring {
+        width: 56px;
+        height: 56px;
+        border: 3px solid rgba(52,211,153,0.1);
+        border-top-color: #34d399;
+        border-radius: 50%;
+        animation: rotate-ring 0.9s linear infinite;
+        margin: 0 auto 1.25rem;
+    }
+
+    .section-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 0.75rem;
+    }
+
+    .big-number {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 380px;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .empty-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.25rem;
+        animation: float 3s ease-in-out infinite;
+    }
+</style>
+
+<div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+    <!-- HEADER -->
+    <div class="ai-header" style="padding:1.25rem 1.5rem;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <div class="scan-container" style="width:46px;height:46px;border-radius:0.75rem;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-cpu" style="font-size:1.25rem;color:#34d399;"></i>
+            </div>
+            <div>
+                <div style="font-size:1.1rem;font-weight:700;color:white;letter-spacing:-0.01em;">Predicciones Financieras</div>
+                <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:2px;">
+                    <i class="bi bi-graph-up-arrow" style="color:#34d399;margin-right:4px;"></i>
+                    Motor ML.NET · Análisis local sin conexión a internet
+                </div>
+            </div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0.875rem;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:99px;">
+                <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;box-shadow:0 0 6px #34d399;"></span>
+                <span style="font-size:0.72rem;color:#34d399;font-weight:600;letter-spacing:0.05em;">ACTIVO</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BODY -->
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:1.25rem;align-items:start;">
+
+        <!-- PANEL IZQUIERDO -->
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+
+            <div class="ft-surface" style="padding:1.25rem;">
+                <div class="section-label"><i class="bi bi-sliders2" style="margin-right:5px;"></i>Mis Prioridades</div>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <label class="priority-check-item">
+                        <input class="priority-check" type="checkbox" value="Reducir gastos en entretenimiento">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.75);">Reducir entretenimiento</span>
+                    </label>
+                    <label class="priority-check-item active">
+                        <input class="priority-check" type="checkbox" value="Ahorrar para emergencias" checked>
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.75);">Fondo de emergencias</span>
+                    </label>
+                    <label class="priority-check-item">
+                        <input class="priority-check" type="checkbox" value="Pagar deudas lo antes posible">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.75);">Pagar deudas</span>
+                    </label>
+                    <label class="priority-check-item">
+                        <input class="priority-check" type="checkbox" value="Invertir parte de mis ingresos">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.75);">Invertir ingresos</span>
+                    </label>
+                    <label class="priority-check-item">
+                        <input class="priority-check" type="checkbox" value="Controlar gastos en alimentación">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.75);">Controlar alimentación</span>
+                    </label>
+                    <label class="priority-check-item">
+                        <input class="priority-check" type="checkbox" value="Optimizar gastos de transporte">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.75);">Optimizar transporte</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="ft-surface" style="padding:1.25rem;">
+                <div class="section-label"><i class="bi bi-piggy-bank" style="margin-right:5px;"></i>Meta de Ahorro</div>
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
+                    <input type="range" id="savingsSlider" min="5" max="50" value="20"
+                           style="flex:1;accent-color:#34d399;"
+                           oninput="document.getElementById('savingsValue').textContent=this.value">
+                    <div style="min-width:48px;text-align:center;padding:0.25rem 0.5rem;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:0.5rem;font-weight:700;font-size:0.9rem;color:#34d399;">
+                        <span id="savingsValue">20</span>%
+                    </div>
+                </div>
+                <div style="font-size:0.75rem;color:rgba(255,255,255,0.35);">Porcentaje mensual a ahorrar</div>
+            </div>
+
+            <button class="analyze-btn" id="btnAnalyze" onclick="analyzeFinances()">
+                <i class="bi bi-cpu" id="btnIcon"></i>
+                <span id="btnText">Analizar Finanzas</span>
+            </button>
+
+            <div style="padding:0.875rem;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:0.75rem;text-align:center;">
+                <i class="bi bi-shield-check" style="color:#34d399;font-size:1.1rem;display:block;margin-bottom:0.375rem;"></i>
+                <div style="font-size:0.73rem;color:rgba(255,255,255,0.4);line-height:1.5;">
+                    Análisis procesado localmente.<br>Tus datos nunca salen del servidor.
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL DERECHO -->
+        <div>
+            <div id="initialState" class="ft-surface">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-bar-chart-line" style="font-size:1.75rem;color:rgba(255,255,255,0.2);"></i>
+                    </div>
+                    <div style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:0.5rem;">Sin análisis aún</div>
+                    <div style="font-size:0.82rem;color:rgba(255,255,255,0.3);max-width:280px;line-height:1.6;">
+                        Selecciona tus prioridades y haz clic en <strong style="color:#34d399;">Analizar Finanzas</strong> para obtener tu reporte.
+                    </div>
+                </div>
+            </div>
+
+            <div id="loadingState" style="display:none;" class="ft-surface">
+                <div class="empty-state">
+                    <div class="loading-ring"></div>
+                    <div style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:0.5rem;">Procesando datos...</div>
+                    <div style="font-size:0.82rem;color:rgba(255,255,255,0.3);">El motor ML.NET está analizando tu historial financiero</div>
+                </div>
+            </div>
+
+            <div id="errorState" style="display:none;" class="ft-surface">
+                <div class="empty-state">
+                    <div class="empty-icon" style="background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2);">
+                        <i class="bi bi-exclamation-triangle" style="font-size:1.5rem;color:#f87171;"></i>
+                    </div>
+                    <div style="font-size:1rem;font-weight:600;color:#f87171;margin-bottom:0.5rem;">Error en el análisis</div>
+                    <div style="font-size:0.82rem;color:rgba(255,255,255,0.3);margin-bottom:1rem;" id="errorMessage"></div>
+                    <button onclick="showState('initialState')" style="padding:0.5rem 1.25rem;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);border-radius:0.5rem;color:#f87171;font-size:0.82rem;cursor:pointer;">Reintentar</button>
+                </div>
+            </div>
+
+            <div id="resultsState" style="display:none;flex-direction:column;gap:1rem;">
+
+                <div id="healthBanner" class="result-card" style="padding:1.25rem 1.5rem;">
+                    <div style="display:flex;align-items:flex-start;gap:1rem;">
+                        <div id="healthIconWrap" style="width:44px;height:44px;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i id="healthIcon" class="bi" style="font-size:1.25rem;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.375rem;">
+                                <span style="font-weight:700;font-size:0.95rem;">Estado Financiero</span>
+                                <span id="healthBadge" style="padding:0.2rem 0.75rem;border-radius:99px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;"></span>
+                            </div>
+                            <p id="summaryText" style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin:0;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.875rem;">
+                    <div class="metric-card">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.875rem;">
+                            <div style="width:28px;height:28px;border-radius:0.5rem;background:rgba(251,191,36,0.1);display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-graph-up-arrow" style="color:#fbbf24;font-size:0.8rem;"></i>
+                            </div>
+                            <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Próx. Mes</span>
+                        </div>
+                        <div class="big-number" id="metricExpenses" style="color:#fbbf24;">$0</div>
+                        <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:0.375rem;">Gasto estimado</div>
+                    </div>
+                    <div class="metric-card">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.875rem;">
+                            <div style="width:28px;height:28px;border-radius:0.5rem;background:rgba(52,211,153,0.1);display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-piggy-bank" style="color:#34d399;font-size:0.8rem;"></i>
+                            </div>
+                            <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Ahorro</span>
+                        </div>
+                        <div class="big-number" id="metricSavings" style="color:#34d399;">$0</div>
+                        <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:0.375rem;">Recomendado/mes</div>
+                    </div>
+                    <div class="metric-card">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.875rem;">
+                            <div style="width:28px;height:28px;border-radius:0.5rem;background:rgba(96,165,250,0.1);display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-wallet2" style="color:#60a5fa;font-size:0.8rem;"></i>
+                            </div>
+                            <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Libre</span>
+                        </div>
+                        <div class="big-number" id="metricFree" style="color:#60a5fa;">$0</div>
+                        <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:0.375rem;">Para gastar</div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="result-card">
+                        <div class="result-card-header">
+                            <div style="width:26px;height:26px;border-radius:0.5rem;background:rgba(251,191,36,0.1);display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-lightbulb" style="color:#fbbf24;font-size:0.8rem;"></i>
+                            </div>
+                            <span style="font-size:0.8rem;font-weight:700;">Recomendaciones</span>
+                        </div>
+                        <div style="padding:1rem 1.25rem;" id="recommendationsList"></div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-card-header">
+                            <div style="width:26px;height:26px;border-radius:0.5rem;background:rgba(167,139,250,0.1);display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-pie-chart" style="color:#a78bfa;font-size:0.8rem;"></i>
+                            </div>
+                            <span style="font-size:0.8rem;font-weight:700;">Por Categoría</span>
+                        </div>
+                        <div style="padding:1rem 1.25rem;" id="categoryAdviceList"></div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-header">
+                        <div style="width:26px;height:26px;border-radius:0.5rem;background:rgba(96,165,250,0.1);display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-calendar-check" style="color:#60a5fa;font-size:0.8rem;"></i>
+                        </div>
+                        <span style="font-size:0.8rem;font-weight:700;">Pagos Recurrentes Detectados</span>
+                    </div>
+                    <div style="padding:1rem 1.25rem;" id="remindersList"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
+@section Scripts {
+    <script>
+        document.querySelectorAll('.priority-check-item').forEach(item => {
+            const cb = item.querySelector('input[type=checkbox]');
+            if (cb && cb.checked) item.classList.add('active');
+            item.addEventListener('click', () => {
+                setTimeout(() => { item.classList.toggle('active', cb.checked); }, 0);
+            });
+        });
+
+        function showState(state) {
+            document.getElementById('initialState').style.display = state === 'initialState' ? 'block' : 'none';
+            document.getElementById('loadingState').style.display  = state === 'loadingState'  ? 'block' : 'none';
+            document.getElementById('errorState').style.display   = state === 'errorState'   ? 'block' : 'none';
+            document.getElementById('resultsState').style.display = state === 'resultsState' ? 'flex'  : 'none';
+        }
+
+        function fmt(n) {
+            return '$' + parseFloat(n || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+
+        async function analyzeFinances() {
+            const priorities = [...document.querySelectorAll('.priority-check:checked')].map(c => c.value);
+            const savingsGoal = parseFloat(document.getElementById('savingsSlider').value) || 20;
+            const btn = document.getElementById('btnAnalyze');
+            btn.disabled = true;
+            document.getElementById('btnIcon').className = 'bi bi-arrow-repeat';
+            document.getElementById('btnText').textContent = 'Analizando...';
+            showState('loadingState');
+
+            try {
+                const response = await fetch('/Predictions/Analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ priorities, savingsGoalPercentage: savingsGoal })
+                });
+                const result = await response.json();
+                if (!result.success) {
+                    document.getElementById('errorMessage').textContent = result.error || 'Error desconocido.';
+                    showState('errorState');
+                    return;
+                }
+                renderResults(result.data);
+                showState('resultsState');
+            } catch (err) {
+                document.getElementById('errorMessage').textContent = err.message;
+                showState('errorState');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('btnIcon').className = 'bi bi-cpu';
+                document.getElementById('btnText').textContent = 'Analizar Finanzas';
+            }
+        }
+
+        function renderResults(data) {
+            const hMap = {
+                'Good':     { bg:'rgba(52,211,153,0.06)', iconBg:'rgba(52,211,153,0.15)', icon:'bi-check-circle-fill', color:'#34d399', label:'SALUDABLE', badgeClass:'health-badge-good' },
+                'Warning':  { bg:'rgba(251,191,36,0.06)', iconBg:'rgba(251,191,36,0.15)', icon:'bi-exclamation-triangle-fill', color:'#fbbf24', label:'ATENCIÓN', badgeClass:'health-badge-warning' },
+                'Critical': { bg:'rgba(248,113,113,0.06)', iconBg:'rgba(248,113,113,0.15)', icon:'bi-x-circle-fill', color:'#f87171', label:'CRÍTICO', badgeClass:'health-badge-critical' }
+            };
+            const h = hMap[data.healthStatus] || hMap['Good'];
+            const banner = document.getElementById('healthBanner');
+            banner.style.borderLeft = `3px solid ${h.color}`;
+            banner.style.background = h.bg;
+            document.getElementById('healthIconWrap').style.background = h.iconBg;
+            const icon = document.getElementById('healthIcon');
+            icon.className = `bi ${h.icon}`;
+            icon.style.color = h.color;
+            const badge = document.getElementById('healthBadge');
+            badge.className = h.badgeClass;
+            badge.textContent = h.label;
+            document.getElementById('summaryText').textContent = data.summary;
+            document.getElementById('metricExpenses').textContent = fmt(data.predictedNextMonthExpenses);
+            document.getElementById('metricSavings').textContent  = fmt(data.recommendedSavings);
+            document.getElementById('metricFree').textContent     = fmt(data.freeToSpend);
+
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = '';
+            (data.recommendations || []).forEach((r, i) => {
+                recList.innerHTML += `<div class="rec-item"><div class="rec-number">${i+1}</div><span style="font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.5;">${r}</span></div>`;
+            });
+            if (!recList.innerHTML) recList.innerHTML = '<span style="font-size:0.8rem;color:rgba(255,255,255,0.3);">Sin recomendaciones.</span>';
+
+            const catList = document.getElementById('categoryAdviceList');
+            catList.innerHTML = '';
+            (data.categoryAdvice || []).forEach((c) => {
+                const pct = c.recommendedMax > 0 ? Math.min(100, (c.currentSpending / c.recommendedMax * 100)) : 0;
+                const barColor = pct >= 100 ? '#f87171' : pct >= 80 ? '#fbbf24' : '#34d399';
+                catList.innerHTML += `<div style="margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.8);">${c.category}</span><span style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${fmt(c.currentSpending)} / ${fmt(c.recommendedMax)}</span></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${barColor};"></div></div><div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:3px;">${c.advice}</div></div>`;
+            });
+            if (!catList.innerHTML) catList.innerHTML = '<span style="font-size:0.8rem;color:rgba(255,255,255,0.3);">Sin datos de categorías.</span>';
+
+            const remList = document.getElementById('remindersList');
+            remList.innerHTML = '';
+            const rems = data.paymentReminders || [];
+            if (!rems.length) {
+                remList.innerHTML = '<span style="font-size:0.8rem;color:rgba(255,255,255,0.3);">No se detectaron pagos recurrentes pendientes.</span>';
+            } else {
+                rems.forEach(r => {
+                    remList.innerHTML += `<div class="reminder-row"><div style="display:flex;align-items:center;gap:0.75rem;"><div style="width:32px;height:32px;border-radius:0.5rem;background:rgba(96,165,250,0.1);display:flex;align-items:center;justify-content:center;"><i class="bi bi-calendar3" style="color:#60a5fa;font-size:0.8rem;"></i></div><div><div style="font-size:0.82rem;font-weight:600;">${r.name}</div><div style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${r.dueDate}</div></div></div><span class="amount-chip" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);">${fmt(r.estimatedAmount)}</span></div>`;
+                });
+            }
+        }
+    </script>
+}

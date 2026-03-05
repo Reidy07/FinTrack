@@ -15,6 +15,10 @@ namespace FinTrack.Core.Interfaces.Services
         // Ingresos
         Task<IncomeDto> AddIncomeAsync(IncomeDto incomeDto, string userId);
         Task<IEnumerable<IncomeDto>> GetIncomesByUserAsync(string userId, DateTime? startDate, DateTime? endDate);
+        Task<IncomeDto?> GetIncomeByIdAsync(int id, string userId);
+        Task UpdateIncomeAsync(IncomeDto incomeDto, string userId);
+        Task DeleteIncomeAsync(int id, string userId);
+
 
         // Categorías
         Task<IEnumerable<CategoryDto>> GetCategoriesByUserAsync(string userId);

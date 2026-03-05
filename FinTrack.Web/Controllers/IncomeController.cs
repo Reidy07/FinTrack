@@ -1,5 +1,4 @@
 ﻿using FinTrack.Core.DTOs;
-using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,45 +9,39 @@ namespace FinTrack.Web.Controllers
     [Authorize]
     public class IncomeController : Controller
     {
-        private readonly IFinancialService _financialService;
+        private readonly HttpClient _httpClient;
 
-        public IncomeController(IFinancialService financialService)
+        public IncomeController(IHttpClientFactory httpClientFactory)
         {
-            _financialService = financialService;
+            _httpClient = httpClientFactory.CreateClient("FinTrackAPI");
         }
 
         private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         private async Task LoadIncomeCategoriesAsync(string userId)
         {
-            var categories = await _financialService.GetCategoriesByUserAsync(userId);
+            var categories = await _httpClient.GetFromJsonAsync<IEnumerable<CategoryDto>>($"api/categories/user/{userId}");
 
-            // Solo categorías de Ingreso o Ambas
-            ViewBag.Categories = new SelectList(
-                categories.Where(c =>
-                    c.Type == Core.Enum.CategoryType.Income ||
-                    c.Type == Core.Enum.CategoryType.Both),
-                "Id",
-                "Name"
-            );
+            if (categories != null)
+            {
+                ViewBag.Categories = new SelectList(
+                    categories.Where(c => c.Type == Core.Enum.CategoryType.Income || c.Type == Core.Enum.CategoryType.Both),
+                    "Id", "Name");
+            }
         }
 
         public async Task<IActionResult> Index()
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+            var incomes = await _httpClient.GetFromJsonAsync<IEnumerable<IncomeDto>>($"api/incomes/user/{userId}");
 
-            var incomes = await _financialService.GetIncomesByUserAsync(userId, null, null);
             await LoadIncomeCategoriesAsync(userId);
-
             return View(incomes);
         }
 
         public async Task<IActionResult> Create()
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
-
             await LoadIncomeCategoriesAsync(userId);
             return View(new IncomeDto { Date = DateTime.Today });
         }
@@ -58,7 +51,7 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Create(IncomeDto dto)
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+            ModelState.Remove(nameof(dto.CategoryName));
 
             if (!ModelState.IsValid)
             {
@@ -66,7 +59,55 @@ namespace FinTrack.Web.Controllers
                 return View(dto);
             }
 
-            await _financialService.AddIncomeAsync(dto, userId);
+            var response = await _httpClient.PostAsJsonAsync($"api/incomes?userId={userId}", dto);
+
+            if (response.IsSuccessStatusCode)
+                return RedirectToAction(nameof(Index));
+
+            ModelState.AddModelError("", "Error al guardar el ingreso.");
+            await LoadIncomeCategoriesAsync(userId);
+            return View(dto);
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var userId = GetUserId();
+            var income = await _httpClient.GetFromJsonAsync<IncomeDto>($"api/incomes/{id}?userId={userId}");
+            if (income == null) return NotFound();
+
+            await LoadIncomeCategoriesAsync(userId);
+            return View(income);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(IncomeDto dto)
+        {
+            var userId = GetUserId();
+            ModelState.Remove(nameof(dto.CategoryName));
+
+            if (!ModelState.IsValid)
+            {
+                await LoadIncomeCategoriesAsync(userId);
+                return View(dto);
+            }
+
+            var response = await _httpClient.PutAsJsonAsync($"api/incomes/{dto.Id}?userId={userId}", dto);
+            if (response.IsSuccessStatusCode) return RedirectToAction(nameof(Index));
+
+            ModelState.AddModelError("", "Error al actualizar.");
+            await LoadIncomeCategoriesAsync(userId);
+            return View(dto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = GetUserId();
+
+            await _httpClient.DeleteAsync($"api/incomes/{id}?userId={userId}");
+
             return RedirectToAction(nameof(Index));
         }
     }

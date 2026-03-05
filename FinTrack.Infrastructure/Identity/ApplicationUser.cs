@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 namespace FinTrack.Infrastructure.Identity
 {
     // Patrón de diseño: Adaptador
-    public class ApplicationUser: IdentityUser, IUser
+    public class ApplicationUser : IdentityUser, IUser
     {
         // Implementación de IUser
         string IUser.Email
@@ -26,7 +26,7 @@ namespace FinTrack.Infrastructure.Identity
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Conversión implícita (opcional pero útil)
+        // Conversión implícita
         public static implicit operator User(ApplicationUser appUser)
         {
             return new User

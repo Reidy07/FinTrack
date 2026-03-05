@@ -1,8 +1,108 @@
-﻿@{
-    ViewData["Title"] = "Alerts";
+﻿@using System.Security.Claims
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Mis Alertas";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var apiUrl = Configuration["ApiSettings:BaseUrl"];
 }
 
-<div class="card p-3">
-    <h5 class="mb-1">Alertas</h5>
-    <p class="text-muted mb-0">Pantalla base (UI en construcción).</p>
+<!-- Variables para Javascript -->
+<input type="hidden" id="hdnUserId" value="@userId" />
+<input type="hidden" id="hdnApiUrl" value="@apiUrl" />
+
+<div class="ft-page">
+    <div class="ft-header">
+        <div>
+            <div class="ft-header-title">Centro de Notificaciones</div>
+            <div class="ft-header-sub">Revisa tus alertas y recordatorios del sistema</div>
+        </div>
+    </div>
+
+    <section class="ft-section max-w-4xl">
+        <div id="alertsContainer" class="space-y-4">
+            <!-- Esqueleto de carga (Skeleton Loader) mientras la API responde -->
+            <div class="animate-pulse flex space-x-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                <div class="rounded-full bg-white/20 h-10 w-10"></div>
+                <div class="flex-1 space-y-4 py-1">
+                    <div class="h-4 bg-white/20 rounded w-3/4"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-white/20 rounded"></div>
+                        <div class="h-4 bg-white/20 rounded w-5/6"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const userId = document.getElementById('hdnUserId').value;
+            const apiUrl = document.getElementById('hdnApiUrl').value;
+            const container = document.getElementById('alertsContainer');
+
+            try {
+                // LLAMADA A TU NUEVA API DE ALERTAS
+                const response = await fetch(`${apiUrl}/api/alerts?userId=${userId}`);
+                if (!response.ok) throw new Error('Error en la red');
+
+                const alerts = await response.json();
+                container.innerHTML = ''; // Limpiar el loading
+
+                if (alerts.length === 0) {
+                    container.innerHTML = `
+                        <div class="ft-empty">
+                            <div class="mx-auto h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                <i class="bi bi-bell-slash text-xl text-white/70"></i>
+                            </div>
+                            <div class="ft-empty-title mt-4">Todo al día</div>
+                            <div class="ft-empty-sub">No tienes notificaciones pendientes.</div>
+                        </div>`;
+                    return;
+                }
+
+                // Renderizar cada alerta
+                alerts.forEach(alert => {
+                    // Elegir icono y color según severidad
+                    let iconColor = 'text-blue-400';
+                    let bgColor = 'bg-blue-400/10';
+                    let icon = 'bi-info-circle';
+
+                    if (alert.severity === 'Warning') {
+                        iconColor = 'text-amber-400'; bgColor = 'bg-amber-400/10'; icon = 'bi-exclamation-triangle';
+                    } else if (alert.severity === 'Critical') {
+                        iconColor = 'text-red-400'; bgColor = 'bg-red-400/10'; icon = 'bi-x-octagon';
+                    }
+
+                    const isReadStyle = alert.isRead ? 'opacity-60' : '';
+                    const newBadge = !alert.isRead ? `<span class="h-2 w-2 rounded-full bg-blue-500 mr-2 mt-1.5"></span>` : '';
+
+                    const dateStr = new Date(alert.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+
+                    const alertHtml = `
+                        <div class="flex items-start p-4 rounded-xl bg-white/5 border ${alert.isRead ? 'border-white/5' : 'border-white/20'} transition hover:bg-white/10 ${isReadStyle}">
+                            ${newBadge}
+                            <div class="flex-shrink-0 h-10 w-10 rounded-xl ${bgColor} flex items-center justify-center mr-4">
+                                <i class="bi ${icon} ${iconColor} text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-white font-semibold flex items-center justify-between">
+                                    ${alert.title}
+                                    <span class="text-xs font-normal text-white/40">${dateStr}</span>
+                                </h4>
+                                <p class="text-white/70 text-sm mt-1">${alert.message}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += alertHtml;
+                });
+
+            } catch (error) {
+                console.error("Error obteniendo alertas:", error);
+                container.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200">Hubo un problema al cargar las alertas. Verifica que la API esté encendida.</div>`;
+            }
+        });
+    </script>
+}

@@ -1,9 +1,205 @@
-﻿@{
-    ViewData["Title"] = "Reportes";
+﻿@using System.Security.Claims
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Análisis Financiero";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var apiUrl = Configuration["ApiSettings:BaseUrl"];
 }
 
-<div class="card p-3">
-    <h5 class="mb-1">Reporte mensual</h5>
-    <p class="text-muted mb-0">Pantalla base para reportes (UI en construcción).</p>
+<!-- Variables ocultas para JS -->
+<input type="hidden" id="hdnUserId" value="@userId" />
+<input type="hidden" id="hdnApiUrl" value="@apiUrl" />
+
+<div class="ft-page">
+    <!-- Header -->
+    <div class="ft-header">
+        <div>
+            <div class="ft-header-title">Análisis Financiero</div>
+            <div class="ft-header-sub">Visualiza el comportamiento de tus finanzas y descubre patrones</div>
+        </div>
+
+        <!-- Filtro Interactivo -->
+        <div class="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/10">
+            <label class="text-sm font-medium text-white/70 pl-2">Mostrar:</label>
+            <select id="timeFilter" class="ft-input !py-2 !text-sm border-none bg-transparent hover:bg-white/5 cursor-pointer">
+                <option value="1">Último Mes (Semanas)</option>
+                <option value="3">Últimos 3 Meses</option>
+                <option value="6" selected>Últimos 6 Meses</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Contenedor Principal con flex-col y gap-8 para separación perfecta sin <br> -->
+    <section class="ft-section flex flex-col gap-8">
+
+        <!-- Fila 1: Gráficas Principales -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-white">Ingresos vs Gastos</h2>
+                    <span id="lblPeriod" class="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded">Cargando...</span>
+                </div>
+                <div class="relative flex-1 min-h-[300px]">
+                    <canvas id="periodChart"></canvas>
+                </div>
+            </div>
+            <br />
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-white">Evolución de tu Balance</h2>
+                    <span class="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded">Histórico Acumulado</span>
+                </div>
+                <div class="relative flex-1 min-h-[300px]">
+                    <canvas id="balanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <br />
+        <!-- Fila 2: Análisis de Categorías -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10 lg:col-span-1 flex flex-col">
+                <h2 class="text-lg font-semibold text-white mb-4">Distribución de Gastos</h2>
+                <div class="relative flex-1 min-h-[250px] flex items-center justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <br />
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10 lg:col-span-2 flex flex-col">
+                <h2 class="text-lg font-semibold text-white mb-4">Detalle por Categoría</h2>
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-white/40 border-b border-white/10">
+                                <th class="text-left font-medium py-3 pr-4">Categoría</th>
+                                <th class="text-right font-medium py-3 pl-4">Total Gastado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody" class="divide-y divide-white/10">
+                            <!-- Se llena por Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </section>
 </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const userId = document.getElementById('hdnUserId').value;
+            const apiUrl = document.getElementById('hdnApiUrl').value;
+            const timeFilter = document.getElementById('timeFilter');
+
+            // Variables globales para almacenar las instancias de Chart.js y poder destruirlas
+            let chartInstances = {
+                period: null,
+                balance: null,
+                category: null
+            };
+
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.6)';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+            Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
+
+            const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+
+            // Función Principal de Carga
+            async function loadDashboardData(months) {
+                // Actualizar label visual
+                document.getElementById('lblPeriod').innerText = months == 1 ? "Últimas 4 Semanas" : `Últimos ${months} Meses`;
+
+                // Ejecutar endpoints concurrentemente con el parámetro months
+                const [periodRes, balanceRes, catRes] = await Promise.all([
+                    fetch(`${apiUrl}/api/reports/period-comparison?userId=${userId}&months=${months}`).then(r => r.json()),
+                    fetch(`${apiUrl}/api/reports/balance-trend?userId=${userId}&months=${months}`).then(r => r.json()),
+                    fetch(`${apiUrl}/api/reports/category-comparison?userId=${userId}&months=${months}`).then(r => r.json())
+                ]);
+
+                // 1. DIBUJAR PERIOD CHART
+                if(chartInstances.period) chartInstances.period.destroy();
+                chartInstances.period = new Chart(document.getElementById('periodChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: periodRes.labels,
+                        datasets:[
+                            { label: 'Ingresos', data: periodRes.incomes, backgroundColor: '#10B981', borderRadius: 6 },
+                            { label: 'Gastos', data: periodRes.expenses, backgroundColor: '#EF4444', borderRadius: 6 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + formatCurrency(c.raw) } } },
+                        scales: { y: { ticks: { callback: v => formatCurrency(v) } } }
+                    }
+                });
+
+                // 2. DIBUJAR BALANCE CHART
+                if(chartInstances.balance) chartInstances.balance.destroy();
+                const ctxB = document.getElementById('balanceChart').getContext('2d');
+                const gradient = ctxB.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+                gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+                chartInstances.balance = new Chart(ctxB, {
+                    type: 'line',
+                    data: {
+                        labels: balanceRes.labels,
+                        datasets:[{
+                            label: 'Balance Total', data: balanceRes.balances,
+                            borderColor: '#3B82F6', backgroundColor: gradient, borderWidth: 3, fill: true, tension: 0.4,
+                            pointBackgroundColor: '#1E1B4B', pointBorderColor: '#3B82F6', pointBorderWidth: 2, pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Balance: ' + formatCurrency(c.raw) } } },
+                        scales: { y: { ticks: { callback: v => formatCurrency(v) } } }
+                    }
+                });
+
+                // 3. DIBUJAR CATEGORY CHART
+                if(chartInstances.category) chartInstances.category.destroy();
+                const bgColors =['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#64748B'];
+
+                chartInstances.category = new Chart(document.getElementById('categoryChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: catRes.labels,
+                        datasets:[{ data: catRes.data, backgroundColor: bgColors, borderColor: '#1e1e2d', borderWidth: 2 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '75%',
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + formatCurrency(c.raw) } } }
+                    }
+                });
+
+                // 4. LLENAR TABLA
+                const tbody = document.getElementById('categoryTableBody');
+                tbody.innerHTML = '';
+                if(catRes.labels.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-white/50">No hay datos en este periodo.</td></tr>';
+                    return;
+                }
+                catRes.labels.forEach((label, i) => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/[0.02] transition">
+                            <td class="py-3 pr-4 flex items-center gap-3 text-white">
+                                <span class="w-3 h-3 rounded-full" style="background-color: ${bgColors[i % bgColors.length]}"></span>${label}
+                            </td>
+                            <td class="py-3 pl-4 text-right font-semibold text-white">${formatCurrency(catRes.data[i])}</td>
+                        </tr>`;
+                });
+            }
+
+            // Escuchar cambios en el Dropdown
+            timeFilter.addEventListener('change', (e) => loadDashboardData(e.target.value));
+
+            // Carga inicial (6 Meses por defecto)
+            loadDashboardData(6);
+        });
+    </script>
+}

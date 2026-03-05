@@ -16,20 +16,17 @@ namespace FinTrack.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var culture = new CultureInfo("en-US"); // Usa $ como símbolo
+            var culture = new CultureInfo("en-US");
             culture.NumberFormat.CurrencySymbol = "$";
-
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
 
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
-
-            // Identity with custom ApplicationUser and password settings
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
             {
-                options.SignIn.RequireConfirmedAccount = false; 
-                options.Password.RequireDigit = false;         
+                options.SignIn.RequireConfirmedAccount = false;
+                options.Password.RequireDigit = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
@@ -37,16 +34,20 @@ namespace FinTrack.Web
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            // Add services for controllers and views
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
             builder.Services.AddScoped<IFinancialService, FinancialService>();
 
+            //  LÍNEA AGREGADA — servicio de predicciones local sin API
+            builder.Services.AddScoped<IGeminiPredictionService, GeminiPredictionService>();
 
+            builder.Services.AddHttpClient("FinTrackAPI", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]!);
+            });
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseMigrationsEndPoint();
@@ -54,13 +55,11 @@ namespace FinTrack.Web
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

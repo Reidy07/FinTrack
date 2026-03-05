@@ -52,6 +52,26 @@
                 <span asp-validation-for="CategoryId" class="text-xs text-red-200"></span>
             </div>
 
+            <!-- Nuevo bloque: Recurrencia -->
+            <div class="p-4 rounded-xl bg-white/5 border border-white/10 mt-4 space-y-4">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input asp-for="IsRecurring" type="checkbox" id="chkRecurring" class="h-5 w-5 rounded border-white/20 bg-transparent text-amber-500 focus:ring-0 focus:ring-offset-0 transition" onchange="togglePattern(this, 'patternWrapper')" />
+                    <span class="text-sm font-medium text-white/80">Este es un gasto recurrente</span>
+                </label>
+
+                <div id="patternWrapper" style="display: none;">
+                    <label class="block text-sm text-white/60 mb-2">Frecuencia</label>
+                    <select asp-for="RecurringPattern" class="ft-input">
+                        <option value="">Selecciona la frecuencia</option>
+                        <option value="Diario">Diario</option>
+                        <option value="Semanal">Semanal</option>
+                        <option value="Mensual">Mensual</option>
+                        <option value="Anual">Anual</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Fin bloque recurrencia -->
+
             <div class="ft-divider pt-5"></div>
 
             <div class="flex items-center justify-end gap-2">
@@ -64,4 +84,19 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePattern(checkbox, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            if (checkbox.checked) {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+                wrapper.querySelector('select').value = '';
+            }
+        }
+        // Ejecutar al inicio por si ya viene marcado
+        document.addEventListener("DOMContentLoaded", () => {
+            togglePattern(document.getElementById('chkRecurring'), 'patternWrapper');
+        });
+    </script>
 }

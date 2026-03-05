@@ -1,5 +1,4 @@
 ﻿using FinTrack.Core.DTOs;
-using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,34 +9,32 @@ namespace FinTrack.Web.Controllers
     [Authorize]
     public class ExpenseController : Controller
     {
-        private readonly IFinancialService _financialService;
+        private readonly HttpClient _httpClient;
 
-        public ExpenseController(IFinancialService financialService)
+        public ExpenseController(IHttpClientFactory httpClientFactory)
         {
-            _financialService = financialService;
+            _httpClient = httpClientFactory.CreateClient("FinTrackAPI");
         }
 
         private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         private async Task LoadExpenseCategoriesAsync(string userId)
         {
-            var categories = await _financialService.GetCategoriesByUserAsync(userId);
+            // Llamamos a la API de categorías
+            var categories = await _httpClient.GetFromJsonAsync<IEnumerable<CategoryDto>>($"api/categories/user/{userId}");
 
-            ViewBag.Categories = new SelectList(
-                categories.Where(c =>
-                    c.Type == Core.Enum.CategoryType.Expense ||
-                    c.Type == Core.Enum.CategoryType.Both),
-                "Id",
-                "Name"
-            );
+            if (categories != null)
+            {
+                ViewBag.Categories = new SelectList(
+                    categories.Where(c => c.Type == Core.Enum.CategoryType.Expense || c.Type == Core.Enum.CategoryType.Both),
+                    "Id", "Name");
+            }
         }
 
         public async Task<IActionResult> Index()
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
-
-            var expenses = await _financialService.GetExpensesByUserAsync(userId, null, null);
+            var expenses = await _httpClient.GetFromJsonAsync<IEnumerable<ExpenseDto>>($"api/expenses/user/{userId}");
             await LoadExpenseCategoriesAsync(userId);
 
             return View(expenses);
@@ -46,8 +43,6 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Create()
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
-
             await LoadExpenseCategoriesAsync(userId);
             return View(new ExpenseDto { Date = DateTime.Today });
         }
@@ -57,9 +52,9 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Create(ExpenseDto dto)
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
 
-            // NO MUEVAN ESTO O DEJA DE GUARDAR, THANKS
+            dto.UserId = userId;
+
             ModelState.Remove(nameof(dto.UserId));
             ModelState.Remove(nameof(dto.CategoryName));
 
@@ -69,16 +64,23 @@ namespace FinTrack.Web.Controllers
                 return View(dto);
             }
 
-            await _financialService.AddExpenseAsync(dto, userId);
-            return RedirectToAction(nameof(Index));
+            // POST a la API
+            var response = await _httpClient.PostAsJsonAsync($"api/expenses?userId={userId}", dto);
+
+            if (response.IsSuccessStatusCode)
+                return RedirectToAction(nameof(Index));
+
+            ModelState.AddModelError("", "Error al guardar en la API.");
+            await LoadExpenseCategoriesAsync(userId);
+            return View(dto);
         }
 
         public async Task<IActionResult> Edit(int id)
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+            // Pedimos el gasto a la API
+            var expense = await _httpClient.GetFromJsonAsync<ExpenseDto>($"api/expenses/{id}?userId={userId}");
 
-            var expense = await _financialService.GetExpenseByIdAsync(id, userId);
             if (expense == null) return NotFound();
 
             await LoadExpenseCategoriesAsync(userId);
@@ -90,10 +92,8 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Edit(ExpenseDto dto)
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+            dto.UserId = userId;
 
-
-            // NO MUEVAN ESTO O DEJA DE GUARDAR, THANKS
             ModelState.Remove(nameof(dto.UserId));
             ModelState.Remove(nameof(dto.CategoryName));
 
@@ -103,8 +103,14 @@ namespace FinTrack.Web.Controllers
                 return View(dto);
             }
 
-            await _financialService.UpdateExpenseAsync(dto, userId);
-            return RedirectToAction(nameof(Index));
+            var response = await _httpClient.PutAsJsonAsync($"api/expenses/{dto.Id}?userId={userId}", dto);
+
+            if (response.IsSuccessStatusCode)
+                return RedirectToAction(nameof(Index));
+
+            ModelState.AddModelError("", "Error al actualizar el gasto.");
+            await LoadExpenseCategoriesAsync(userId);
+            return View(dto);
         }
 
         [HttpPost]
@@ -112,9 +118,8 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = GetUserId();
-            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
-
-            await _financialService.DeleteExpenseAsync(id, userId);
+            // DELETE a la API
+            await _httpClient.DeleteAsync($"api/expenses/{id}?userId={userId}");
             return RedirectToAction(nameof(Index));
         }
     }

@@ -32,7 +32,7 @@ namespace FinTrack.Infrastructure.Data.Configurations
 
             builder.Property(b => b.EndDate)
                 .IsRequired();
-     
+
             // Índices
             builder.HasIndex(b => new { b.UserId, b.StartDate, b.EndDate })
                 .HasDatabaseName("IX_Budgets_UserId_Dates");

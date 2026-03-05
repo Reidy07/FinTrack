@@ -28,10 +28,7 @@
 
             <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div class="md:col-span-2">
-                    <input id="searchInput"
-                           class="ft-input"
-                           type="text"
-                           placeholder="Buscar gastos por descripción o categoría..." />
+                    <input id="searchInput" class="ft-input" type="text" placeholder="Buscar gastos por descripción o categoría..." />
                 </div>
 
                 <select id="categoryFilter" class="ft-input">
@@ -40,12 +37,10 @@
                     {
                         foreach (var c in items)
                         {
-                            // El filtro compara contra data-cat="@item.CategoryName" => usamos el texto
                             <option value="@c.Text">@c.Text</option>
                         }
                     }
                 </select>
-
             </div>
         </div>
     </section>
@@ -78,8 +73,16 @@
                                             <i class="bi bi-bag text-amber-300"></i>
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="font-semibold text-white truncate">@item.Description</div>
-                                            <div class="text-xs text-white/45">Gasto</div>
+                                            <div class="font-semibold text-white truncate flex items-center gap-2">
+                                                @item.Description
+                                                @if (item.IsRecurring)
+                                                {
+                                                    <span class="text-xs text-amber-500/80 bg-amber-500/10 px-2 py-0.5 rounded flex items-center gap-1" title="Gasto recurrente @item.RecurringPattern">
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div class="text-xs text-white/45">Gasto @(item.IsRecurring? item.RecurringPattern: "")</div>
                                         </div>
                                     </div>
                                 </td>
@@ -92,37 +95,24 @@
                                 </td>
 
                                 <td class="py-4 pr-4 text-white/70">
-                                    @item.Date.ToString("dd 'de' MMMM, yyyy")
+                                    @item.Date.ToString("dd MMM, yyyy")
                                 </td>
 
                                 <td class="py-4 pl-4 text-right font-semibold text-white">
                                     -@item.Amount.ToString("C")
                                 </td>
 
+                                <!-- Columna de acciones corregida (Solo 1 td en lugar de 2) -->
                                 <td class="py-4 pl-4 text-right">
-                                    <div class="inline-flex items-center gap-2">
-                                        @* Conecta estos a tus Actions reales cuando me digas sus rutas *@
-                                        <a class="ft-btn-ghost px-3 py-2"
-                                           href="#"
-                                           title="Editar">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a class="ft-btn-ghost px-3 py-2 text-sm" asp-action="Edit" asp-route-id="@item.Id" title="Editar">
                                             <i class="bi bi-pencil"></i>
-                                        </a>
-                                    </div>
-                                </td>    
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <a class="ft-btn-secondary text-sm"
-                                           asp-action="Edit" asp-route-id="@item.Id">
-                                            <i class="bi bi-pencil"></i>
-                                            Editar
                                         </a>
 
-                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post"
-                                              onsubmit="return confirm('¿Eliminar este gasto? Esta acción no se puede deshacer.');">
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('¿Eliminar este gasto?');" class="m-0 p-0">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="ft-btn-ghost text-sm">
+                                            <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
                                                 <i class="bi bi-trash"></i>
-                                                Eliminar
                                             </button>
                                         </form>
                                     </div>
@@ -195,6 +185,25 @@
                 </select>
             </div>
 
+            <!-- Recurrencia en el Modal -->
+            <div class="p-4 rounded-xl bg-white/5 border border-white/10 mt-4 space-y-4">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="IsRecurring" id="modalChkRecurring" value="true" class="h-5 w-5 rounded border-white/20 bg-transparent text-amber-500 focus:ring-0 focus:ring-offset-0 transition" onchange="togglePattern(this, 'modalPatternWrapper')" />
+                    <span class="text-sm font-medium text-white/80">Este es un gasto recurrente</span>
+                </label>
+
+                <div id="modalPatternWrapper" style="display: none;">
+                    <label class="block text-sm text-white/60 mb-2">Frecuencia</label>
+                    <select name="RecurringPattern" class="ft-input">
+                        <option value="">Selecciona la frecuencia</option>
+                        <option value="Diario">Diario</option>
+                        <option value="Semanal">Semanal</option>
+                        <option value="Mensual">Mensual</option>
+                        <option value="Anual">Anual</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="ft-divider pt-5"></div>
 
             <div class="flex items-center justify-end gap-2">
@@ -211,7 +220,7 @@
 
 @section Scripts {
     <script>
-        // Modal helpers (sin Bootstrap)
+        // Modal helpers
         (function () {
             function openModal(id) {
                 const el = document.getElementById(id);
@@ -234,7 +243,6 @@
                 const closeBtn = e.target.closest('[data-modal-close]');
                 if (closeBtn) closeModal(closeBtn.getAttribute('data-modal-close'));
 
-                // click en backdrop cierra
                 const backdrop = e.target.closest('.ft-modal-backdrop');
                 if (backdrop && e.target === backdrop) closeModal(backdrop.id);
             });
@@ -249,7 +257,17 @@
             });
         })();
 
-        // Filtro simple frontend (sin tocar backend)
+        // Filtro y Toggle Pattern
+        function togglePattern(checkbox, wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            if (checkbox.checked) {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+                wrapper.querySelector('select').value = '';
+            }
+        }
+
         (function () {
             const search = document.getElementById('searchInput');
             const cat = document.getElementById('categoryFilter');
