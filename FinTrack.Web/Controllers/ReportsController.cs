@@ -1,7 +1,7 @@
-﻿using FinTrack.Core.Interfaces.Services;
+﻿using FinTrack.Core.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuestPDF.Fluent; // para exportar PDF
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Security.Claims;
@@ -11,11 +11,12 @@ namespace FinTrack.Web.Controllers
     [Authorize]
     public class ReportsController : Controller
     {
-        private readonly IFinancialService _financialService;
+        private readonly HttpClient _httpClient;
 
-        public ReportsController(IFinancialService financialService)
+        // Inyectamos HttpClient
+        public ReportsController(IHttpClientFactory httpClientFactory)
         {
-            _financialService = financialService;
+            _httpClient = httpClientFactory.CreateClient("FinTrackAPI");
         }
 
         public IActionResult Index() => View();
@@ -26,11 +27,16 @@ namespace FinTrack.Web.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Challenge();
 
-            var startDate = DateTime.Now.AddMonths(-6);
-            var endDate = DateTime.Now;
+            var startDate = DateTime.Now.AddMonths(-6).ToString("yyyy-MM-dd");
+            var endDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-            var expenses = await _financialService.GetExpensesByUserAsync(userId, startDate, endDate);
-            var incomes = await _financialService.GetIncomesByUserAsync(userId, startDate, endDate);
+            // Obtenemos los datos desde la API
+            var expenses = await _httpClient.GetFromJsonAsync<IEnumerable<ExpenseDto>>($"api/expenses/user/{userId}?startDate={startDate}&endDate={endDate}");
+            var incomes = await _httpClient.GetFromJsonAsync<IEnumerable<IncomeDto>>($"api/incomes/user/{userId}?startDate={startDate}&endDate={endDate}");
+
+            // Validar nulos por seguridad
+            expenses ??= new List<ExpenseDto>();
+            incomes ??= new List<IncomeDto>();
 
             var totalExpenses = expenses.Sum(e => e.Amount);
             var totalIncomes = incomes.Sum(i => i.Amount);

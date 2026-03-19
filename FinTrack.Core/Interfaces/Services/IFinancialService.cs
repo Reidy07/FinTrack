@@ -22,6 +22,7 @@ namespace FinTrack.Core.Interfaces.Services
 
         // Categorías
         Task<IEnumerable<CategoryDto>> GetCategoriesByUserAsync(string userId);
+        Task<CategoryDetailDto?> GetCategoryDetailsAsync(int categoryId, string userId);
         Task<CategoryDto> AddCategoryAsync(CategoryDto categoryDto, string userId);
         Task<CategoryDto?> GetCategoryByIdAsync(int id, string userId);
         Task UpdateCategoryAsync(CategoryDto dto, string userId);
@@ -37,5 +38,6 @@ namespace FinTrack.Core.Interfaces.Services
 
         // Alerts
         Task<IEnumerable<AlertDto>> GetAlertsAsync(string userId);
+        Task MarkAlertAsReadAsync(int id, string userId);
     }
 }

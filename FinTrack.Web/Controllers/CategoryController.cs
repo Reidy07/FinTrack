@@ -24,6 +24,19 @@ namespace FinTrack.Web.Controllers
             return View(categories);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var userId = GetUserId();
+
+            // Llamamos a nuestra API
+            var details = await _httpClient.GetFromJsonAsync<CategoryDetailDto>($"api/categories/{id}/details?userId={userId}");
+
+            if (details == null) return NotFound();
+
+            return View(details); // Enviamos el DTO a la vista
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CategoryDto dto)
@@ -89,3 +102,4 @@ namespace FinTrack.Web.Controllers
         }
     }
 }
+

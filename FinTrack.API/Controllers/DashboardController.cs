@@ -19,6 +19,8 @@ namespace FinTrack.API.Controllers
         [HttpGet("summary")]
         public async Task<ActionResult<DashboardSummaryDto>> GetSummary([FromQuery] string userId)
         {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("Falta el UserId");
+
             var summary = await _financialService.GetDashboardSummaryAsync(userId, DateTime.Now);
             return Ok(summary);
         }

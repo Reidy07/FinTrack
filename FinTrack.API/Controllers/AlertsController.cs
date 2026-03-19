@@ -28,7 +28,7 @@ namespace FinTrack.API.Controllers
         [HttpPut("{id}/read")]
         public async Task<IActionResult> MarkAsRead(int id, [FromQuery] string userId)
         {
-            // Por ahora devolvemos Ok, pero hay que agregar un metodo en el servicio para actualizar el estado de la alerta.
+            await _financialService.MarkAlertAsReadAsync(id, userId);
             return Ok();
         }
     }

@@ -1,5 +1,4 @@
 ﻿using FinTrack.Core.DTOs;
-using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -9,11 +8,11 @@ namespace FinTrack.Web.Controllers
     [Authorize]
     public class PredictionsController : Controller
     {
-        private readonly IGeminiPredictionService _predictionService;
+        private readonly HttpClient _httpClient;
 
-        public PredictionsController(IGeminiPredictionService predictionService)
+        public PredictionsController(IHttpClientFactory httpClientFactory)
         {
-            _predictionService = predictionService;
+            _httpClient = httpClientFactory.CreateClient("FinTrackAPI");
         }
 
         [HttpGet]
@@ -31,12 +30,25 @@ namespace FinTrack.Web.Controllers
                 if (string.IsNullOrEmpty(userId))
                     return Json(new { success = false, error = "Usuario no autenticado." });
 
-                var result = await _predictionService.GetFinancialPredictionAsync(
-                    userId,
-                    form.Priorities ?? new List<string>(),
-                    form.SavingsGoalPercentage);
+                // Usamos un objeto anónimo con la estructura exacta que espera la API
+                var request = new
+                {
+                    UserId = userId,
+                    Priorities = form.Priorities ?? new List<string>(),
+                    SavingsGoalPercentage = form.SavingsGoalPercentage
+                };
 
-                return Json(new { success = true, data = result });
+                // Hacemos la petición a nuestra API
+                var response = await _httpClient.PostAsJsonAsync("api/predictions/analyze", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<GeminiPredictionResultDto>();
+                    return Json(new { success = true, data = result });
+                }
+
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                return Json(new { success = false, error = $"Error de API: {errorMsg}" });
             }
             catch (Exception ex)
             {

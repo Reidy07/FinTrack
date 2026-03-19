@@ -30,6 +30,15 @@ namespace FinTrack.API.Controllers
             return Ok(category);
         }
 
+        [HttpGet("{id}/details")]
+        public async Task<ActionResult<CategoryDetailDto>> GetCategoryDetails(int id, [FromQuery] string userId)
+        {
+            var details = await _financialService.GetCategoryDetailsAsync(id, userId);
+            if (details == null) return NotFound("Categoría no encontrada o sin permisos.");
+
+            return Ok(details);
+        }
+
         [HttpPost]
         public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CategoryDto dto, [FromQuery] string userId)
         {
