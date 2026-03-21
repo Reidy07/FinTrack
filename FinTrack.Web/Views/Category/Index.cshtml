@@ -7,25 +7,6 @@
     var incomes = Model?.Where(c => c.Type == CategoryType.Income || c.Type == CategoryType.Both).ToList() ?? new();
 }
 
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-    }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-</style>
-
 <div class="ft-page">
     <div class="ft-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -39,15 +20,12 @@
         </button>
     </div>
 
-    <!-- CONTENEDOR PRINCIPAL-->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+    <!-- CONTENEDOR PRINCIPAL: Lado a Lado en pantallas grandes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         <!-- COLUMNA: GASTOS -->
-        <!-- Le damos una altura fija a la sección y le ponemos overflow-hidden -->
-        <section class="ft-section flex flex-col h-[600px] lg:h-[calc(100vh-160px)] overflow-hidden">
-
-            <!-- Título fijo (No hace scroll) -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4 shrink-0">
+        <section class="ft-section flex flex-col">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
                 <div class="flex items-center gap-2">
                     <div class="w-3 h-3 rounded-full bg-red-400/80"></div>
                     <h3 class="text-lg font-semibold">Gastos</h3>
@@ -57,75 +35,63 @@
                 </span>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    @if (expenses.Any())
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
+                @if (expenses.Any())
+                {
+                    foreach (var c in expenses)
                     {
-                        foreach (var c in expenses)
-                        {
-                            <!-- Tarjeta Original -->
-                            <div class="ft-card p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="h-10 w-10 rounded-xl flex shrink-0 items-center justify-center shadow-inner"
-                                             style="background:@(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)30; border: 1px solid @(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)50;">
-                                            <i class="bi bi-coin text-white/90"></i>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <div class="font-semibold text-sm truncate">@c.Name</div>
-                                            <div class="text-xs text-white/40">Gasto</div>
-                                        </div>
+                        <div class="ft-card p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="h-10 w-10 rounded-xl flex shrink-0 items-center justify-center shadow-inner"
+                                         style="background:@(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)30; border: 1px solid @(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)50;">
+                                        <i class="bi bi-coin text-white/90"></i>
                                     </div>
-
-                                    <!-- BOTONES IDÉNTICOS AL MÓDULO DE GASTOS -->
-                                    <div class="flex items-center justify-end gap-2 shrink-0">
-                                        <a asp-action="Details" asp-route-id="@c.Id" class="ft-btn-ghost px-3 py-2 text-sm" title="Ver Detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-
-                                        <button type="button" class="ft-btn-ghost px-3 py-2 text-sm"
-                                                data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
-                                                data-modal-open="editCategoryModal" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-
-                                        <form asp-action="Delete" method="post" class="m-0 p-0" onsubmit="return confirm('¿Eliminar esta categoría? Se conservarán los gastos.');">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@c.Id" />
-                                            <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-sm truncate">@c.Name</div>
+                                        <div class="text-xs text-white/40">Gasto</div>
                                     </div>
                                 </div>
 
-                                @if (!string.IsNullOrWhiteSpace(c.Description))
-                                {
-                                    <div class="mt-3 text-xs text-white/50 truncate">@c.Description</div>
-                                }
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" class="p-1.5 text-white/50 hover:text-white transition-colors rounded-md hover:bg-white/10"
+                                            data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
+                                            data-modal-open="editCategoryModal">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <form asp-action="Delete" method="post" class="inline m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button type="submit" class="p-1.5 text-red-400/70 hover:text-red-400 transition-colors rounded-md hover:bg-red-400/10">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                        }
-                    }
-                    else
-                    {
-                        <!-- Estado vacío original -->
-                        <div class="ft-empty col-span-full py-8 text-center bg-white/5 rounded-xl border border-white/5 border-dashed">
-                            <i class="bi bi-wallet2 text-2xl text-white/20 mb-2 block"></i>
-                            <div class="ft-empty-title text-sm font-medium text-white/70">Sin categorías de gasto</div>
-                            <div class="ft-empty-sub text-xs text-white/40 mt-1">Crea una para comenzar</div>
+
+                            @if (!string.IsNullOrWhiteSpace(c.Description))
+                            {
+                                <div class="mt-3 text-xs text-white/50 truncate">@c.Description</div>
+                            }
                         </div>
                     }
-                </div>
+                }
+                else
+                {
+                    <div class="ft-empty col-span-full py-8 text-center bg-white/5 rounded-xl border border-white/5 border-dashed">
+                        <i class="bi bi-wallet2 text-2xl text-white/20 mb-2 block"></i>
+                        <div class="ft-empty-title text-sm font-medium text-white/70">Sin categorías de gasto</div>
+                        <div class="ft-empty-sub text-xs text-white/40 mt-1">Crea una para comenzar</div>
+                    </div>
+                }
             </div>
         </section>
-
         <br />
 
         <!-- COLUMNA: INGRESOS -->
-        <section class="ft-section flex flex-col h-[600px] lg:h-[calc(100vh-160px)] overflow-hidden">
-
-            <!-- Título fijo -->
-            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4 shrink-0">
+        <section class="ft-section flex flex-col">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
                 <div class="flex items-center gap-2">
                     <div class="w-3 h-3 rounded-full bg-emerald-400/80"></div>
                     <h3 class="text-lg font-semibold">Ingresos</h3>
@@ -135,73 +101,63 @@
                 </span>
             </div>
 
-            <!-- Lista con SCROLL independiente -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    @if (incomes.Any())
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
+                @if (incomes.Any())
+                {
+                    foreach (var c in incomes)
                     {
-                        foreach (var c in incomes)
-                        {
-                            <!-- Tarjeta -->
-                            <div class="ft-card p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="h-10 w-10 rounded-xl flex shrink-0 items-center justify-center shadow-inner"
-                                             style="background:@(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)30; border: 1px solid @(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)50;">
-                                            <i class="bi bi-cash-stack text-white/90"></i>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <div class="font-semibold text-sm truncate">@c.Name</div>
-                                            <div class="text-xs text-emerald-200/50">Ingreso</div>
-                                        </div>
+                        <div class="ft-card p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="h-10 w-10 rounded-xl flex shrink-0 items-center justify-center shadow-inner"
+                                         style="background:@(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)30; border: 1px solid @(string.IsNullOrWhiteSpace(c.Color) ? "#2b2f3a" : c.Color)50;">
+                                        <i class="bi bi-cash-stack text-white/90"></i>
                                     </div>
-
-                                    <!-- BOTONES -->
-                                    <div class="flex items-center justify-end gap-2 shrink-0">
-                                        <a asp-action="Details" asp-route-id="@c.Id" class="ft-btn-ghost px-3 py-2 text-sm" title="Ver Detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-
-                                        <button type="button" class="ft-btn-ghost px-3 py-2 text-sm"
-                                                data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
-                                                data-modal-open="editCategoryModal" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-
-                                        <form asp-action="Delete" method="post" class="m-0 p-0" onsubmit="return confirm('¿Eliminar esta categoría? Se conservarán los ingresos.');">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@c.Id" />
-                                            <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-sm truncate">@c.Name</div>
+                                        <div class="text-xs text-emerald-200/50">Ingreso</div>
                                     </div>
                                 </div>
 
-                                @if (!string.IsNullOrWhiteSpace(c.Description))
-                                {
-                                    <div class="mt-3 text-xs text-white/50 truncate">@c.Description</div>
-                                }
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" class="p-1.5 text-white/50 hover:text-white transition-colors rounded-md hover:bg-white/10"
+                                            data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
+                                            data-modal-open="editCategoryModal">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <form asp-action="Delete" method="post" class="inline m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button type="submit" class="p-1.5 text-red-400/70 hover:text-red-400 transition-colors rounded-md hover:bg-red-400/10">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                        }
-                    }
-                    else
-                    {
-                        <!-- Estado vacío original -->
-                        <div class="ft-empty col-span-full py-8 text-center bg-white/5 rounded-xl border border-white/5 border-dashed">
-                            <i class="bi bi-piggy-bank text-2xl text-white/20 mb-2 block"></i>
-                            <div class="ft-empty-title text-sm font-medium text-white/70">Sin categorías de ingreso</div>
-                            <div class="ft-empty-sub text-xs text-white/40 mt-1">Crea una para comenzar</div>
+
+                            @if (!string.IsNullOrWhiteSpace(c.Description))
+                            {
+                                <div class="mt-3 text-xs text-white/50 truncate">@c.Description</div>
+                            }
                         </div>
                     }
-                </div>
+                }
+                else
+                {
+                    <div class="ft-empty col-span-full py-8 text-center bg-white/5 rounded-xl border border-white/5 border-dashed">
+                        <i class="bi bi-piggy-bank text-2xl text-white/20 mb-2 block"></i>
+                        <div class="ft-empty-title text-sm font-medium text-white/70">Sin categorías de ingreso</div>
+                        <div class="ft-empty-sub text-xs text-white/40 mt-1">Crea una para comenzar</div>
+                    </div>
+                }
             </div>
         </section>
 
     </div>
 </div>
 
-<!-- MODALES (Crear y Editar) -->
+<!-- MODAL: Crear -->
 <div id="newCategoryModal" class="hidden ft-modal-backdrop" aria-hidden="true">
     <div class="ft-modal">
         <div class="flex items-start justify-between gap-4">
@@ -255,6 +211,7 @@
     </div>
 </div>
 
+<!-- MODAL: Editar -->
 <div id="editCategoryModal" class="hidden ft-modal-backdrop" aria-hidden="true">
     <div class="ft-modal">
         <div class="flex items-start justify-between gap-4">
@@ -326,5 +283,8 @@
             document.getElementById('edit_Type').value = c.Type; // enum int
             document.getElementById('edit_Color').value = c.Color || '#3498db';
         });
+
+                modal.classList.remove('hidden');
+                modal.classList.add('hidden');
     </script>
 }

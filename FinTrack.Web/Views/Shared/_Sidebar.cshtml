@@ -1,43 +1,47 @@
 ﻿@{
-    var c = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
 
-    Func<string, string> link = (name) =>
-        "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition " +
-        (c == name
-            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/15"
-            : "text-white/70 hover:text-white hover:bg-white/5 border border-transparent");
+    Func<string, string> itemClasses = name =>
+        controller == name
+            ? "flex items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-200 transition"
+            : "flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-sm font-medium text-white/65 transition hover:border-white/10 hover:bg-white/5 hover:text-white";
 }
 
-<nav class="space-y-2">
-    <a class="@link("Dashboard")" asp-controller="Dashboard" asp-action="Index">
-        <i class="bi bi-grid-1x2 text-base"></i><span>Dashboard</span>
+<nav class="space-y-2 lg:space-y-2">
+    <a class="@itemClasses("Dashboard")" asp-controller="Dashboard" asp-action="Index">
+        <i class="bi bi-grid-1x2"></i>
+        <span>Dashboard</span>
     </a>
 
-    <a class="@link("Expense")" asp-controller="Expense" asp-action="Index">
-        <i class="bi bi-wallet2 text-base"></i><span>Gastos</span>
+    <a class="@itemClasses("Expense")" asp-controller="Expense" asp-action="Index">
+        <i class="bi bi-wallet2"></i>
+        <span>Gastos</span>
     </a>
 
-    <a class="@link("Income")" asp-controller="Income" asp-action="Index">
-        <i class="bi bi-graph-up-arrow text-base"></i><span>Ingresos</span>
+    <a class="@itemClasses("Income")" asp-controller="Income" asp-action="Index">
+        <i class="bi bi-graph-up-arrow"></i>
+        <span>Ingresos</span>
     </a>
 
-    <a class="@link("Category")" asp-controller="Category" asp-action="Index">
-        <i class="bi bi-folder text-base"></i><span>Categorías</span>
+    <a class="@itemClasses("Category")" asp-controller="Category" asp-action="Index">
+        <i class="bi bi-folder"></i>
+        <span>Categorías</span>
     </a>
 
-    <a class="@link("Reports")" asp-controller="Reports" asp-action="Index">
-        <i class="bi bi-file-earmark-text text-base"></i><span>Reportes</span>
+    <a class="@itemClasses("Reports")" asp-controller="Reports" asp-action="Index">
+        <i class="bi bi-file-earmark-bar-graph"></i>
+        <span>Reportes</span>
     </a>
 
-    <div class="pt-6">
-        <div class="px-2 text-[11px] uppercase tracking-[0.22em] text-white/35">Inteligencia</div>
-    </div>
+    <div class="hidden px-2 pt-5 text-[11px] uppercase tracking-[0.24em] text-white/30 lg:block">Inteligencia</div>
 
-    <a class="@link("Predictions")" asp-controller="Predictions" asp-action="Index">
-        <i class="bi bi-stars text-emerald-300 text-base"></i><span>Predicciones IA</span>
+    <a class="@itemClasses("Predictions")" asp-controller="Predictions" asp-action="Index">
+        <i class="bi bi-stars text-emerald-300"></i>
+        <span>Predicciones IA</span>
     </a>
 
-    <a class="@link("Alerts")" asp-controller="Alerts" asp-action="Index">
-        <i class="bi bi-bell text-base"></i><span>Alertas</span>
+    <a class="@itemClasses("Alerts")" asp-controller="Alerts" asp-action="Index">
+        <i class="bi bi-bell"></i>
+        <span>Alertas</span>
     </a>
 </nav>

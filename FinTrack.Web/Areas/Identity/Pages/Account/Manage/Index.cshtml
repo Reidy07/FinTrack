@@ -7,16 +7,17 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Mi Perfil";
+    // Forzamos el uso del Layout principal para tener el Sidebar oscuro
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var user = await UserManager.GetUserAsync(User);
-    var initial = !string.IsNullOrEmpty(user?.FirstName) ? user.FirstName.Substring(0, 1).ToUpper() : "U";
+    var initial = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName.Substring(0, 1).ToUpper() : "U";
 }
 
-<div class="ft-page max-w-4xl mx-auto">
+<div class="ft-page max-w-4xl">
 
     <!-- Encabezado -->
-    <div class="ft-header mb-8">
+    <div class="ft-header mb-6">
         <div>
             <h1 class="ft-header-title">@ViewData["Title"]</h1>
             <p class="ft-header-sub">Gestiona tu información personal y preferencias</p>
@@ -26,104 +27,139 @@
     <partial name="_StatusMessage" for="StatusMessage" />
 
     <!-- SECCIÓN 1: Información Personal -->
-    <div class="ft-section mb-8">
+    <div class="ft-section">
         <form id="profile-form" method="post">
 
-            <!-- Cabecera del Perfil (Avatar arreglado) -->
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 pb-8 border-b border-white/10">
-                <!-- Avatar fijo -->
-                <div class="h-24 w-24 flex-none rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-4xl font-bold shadow-lg">
-                    @initial
-                </div>
-
-                <div class="flex-1 text-center sm:text-left mt-2">
-                    <h2 class="text-2xl font-bold text-white mb-1">@user?.FirstName @user?.LastName</h2>
-                    <p class="text-white/60 mb-3 text-sm">@user?.Email</p>
-
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-white/70">
-                        <i class="bi bi-calendar3 text-emerald-500"></i>
-                        Miembro desde @user?.CreatedAt.ToString("MMMM yyyy")
+            <!-- Cabecera de la tarjeta con Botón Guardar -->
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex items-center gap-4">
+                    <!-- Avatar -->
+                    <div class="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl font-semibold">
+                        @initial
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">@user.FirstName @user.LastName</h2>
+                        <p class="text-sm text-white/50">@user.Email</p>
+                        <p class="text-xs text-white/30 mt-1">Miembro desde @user.CreatedAt.ToString("MMM yyyy")</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Grid de Inputs (Con mejor espaciado: space-y-2) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
-                <div class="space-y-2">
-                    <label asp-for="Input.FirstName" class="block text-sm font-medium text-white/80">Nombre</label>
-                    <input asp-for="Input.FirstName" class="ft-input w-full" placeholder="Tu nombre" />
-                    <span asp-validation-for="Input.FirstName" class="text-xs text-red-400"></span>
-                </div>
-
-
-                <div class="space-y-2">
-                    <label asp-for="Input.LastName" class="block text-sm font-medium text-white/80">Apellido</label>
-                    <input asp-for="Input.LastName" class="ft-input w-full" placeholder="Tu apellido" />
-                    <span asp-validation-for="Input.LastName" class="text-xs text-red-400"></span>
-                </div>
-
-                <div class="md:col-span-2 space-y-2">
-                    <label asp-for="Username" class="block text-sm font-medium text-white/80">Usuario / Correo Electrónico</label>
-                    <input asp-for="Username" class="ft-input w-full opacity-50 cursor-not-allowed" disabled />
-                    <p class="text-xs text-white/50 mt-2 flex items-center gap-1.5">
-                        <i class="bi bi-info-circle text-blue-400"></i>
-                        El correo electrónico no se puede cambiar por motivos de seguridad.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Botón Guardar -->
-            <div class="flex justify-end pt-6 border-t border-white/10">
-                <button id="update-profile-button" type="submit" class="ft-btn-primary px-8 py-2.5">
+                <button id="update-profile-button" type="submit" class="ft-btn-primary">
                     Guardar Cambios
                 </button>
             </div>
 
+            <!-- Grid de Inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Nombre -->
+                <div class="space-y-1.5">
+                    <label asp-for="Input.FirstName" class="text-sm text-white/60 pl-1"></label>
+                    <input asp-for="Input.FirstName" class="ft-input" placeholder="Tu nombre" />
+                    <span asp-validation-for="Input.FirstName" class="text-xs text-red-400 pl-1"></span>
+                </div>
+
+                <!-- Apellido -->
+                <div class="space-y-1.5">
+                    <label asp-for="Input.LastName" class="text-sm text-white/60 pl-1"></label>
+                    <input asp-for="Input.LastName" class="ft-input" placeholder="Tu apellido" />
+                    <span asp-validation-for="Input.LastName" class="text-xs text-red-400 pl-1"></span>
+                </div>
+
+                <!-- Usuario (Read Only) -->
+                <div class="space-y-1.5">
+                    <label asp-for="Username" class="text-sm text-white/60 pl-1">Usuario / Email</label>
+                    <input asp-for="Username" class="ft-input opacity-50 cursor-not-allowed" disabled />
+                </div>
+            </div>
         </form>
     </div>
 
     <!-- SECCIÓN 2: Seguridad -->
-    <div class="ft-section mb-8">
+    <div class="ft-section space-y-4">
         <h3 class="text-lg font-semibold text-white mb-4">Seguridad</h3>
 
-        <div class="flex items-center justify-between p-5 rounded-xl bg-white/5 border border-white/10">
-            <div class="flex items-center gap-4">
-                <div class="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/70">
-                    <i class="bi bi-shield-lock text-xl"></i>
-
+        <!-- Cambiar Contraseña -->
+        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                 </div>
                 <div>
-                    <p class="font-semibold text-white">Cambiar Contraseña</p>
-                    <p class="text-sm text-white/50 mt-1">Actualiza tu contraseña regularmente</p>
+                    <p class="font-medium text-white">Cambiar Contraseña</p>
+                    <p class="text-sm text-white/50">Actualiza tu contraseña regularmente</p>
                 </div>
             </div>
-            <a asp-page="./ChangePassword" class="ft-btn-secondary text-sm px-4">Modificar</a>
+            <a asp-page="./ChangePassword" class="ft-btn-secondary text-xs">Cambiar</a>
+        </div>
+
+        <!-- 2FA -->
+        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></svg>
+                </div>
+                <div>
+                    <p class="font-medium text-white">Autenticación de dos factores</p>
+                    <p class="text-sm text-white/50">Próximamente disponible</p>
+                </div>
+            </div>
+            <button disabled class="ft-btn-ghost opacity-50 cursor-not-allowed text-xs">Activar</button>
         </div>
     </div>
 
-    <!-- SECCIÓN 3: Datos y Privacidad -->
-    <div class="ft-section mb-8">
+    <!-- SECCIÓN 3: Preferencias -->
+    <div class="ft-section space-y-4">
+        <h3 class="text-lg font-semibold text-white mb-4">Preferencias</h3>
+
+        <!-- Notificaciones -->
+        <div class="flex items-center justify-between border-b border-white/10 pb-4">
+            <div class="flex items-center gap-3">
+                <svg class="text-white/40" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                <div>
+                    <p class="font-medium text-white">Notificaciones</p>
+                    <p class="text-sm text-white/50">Gestiona tus alertas y notificaciones</p>
+                </div>
+            </div>
+            <button class="text-sm text-white hover:text-emerald-400 transition font-medium">Configurar</button>
+        </div>
+
+        <!-- Tema -->
+        <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center gap-3">
+                <svg class="text-white/40" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a7 7 0 1 0 10 10" /></svg>
+                <div>
+                    <p class="font-medium text-white">Tema</p>
+                    <p class="text-sm text-white/50">Modo oscuro activado</p>
+                </div>
+            </div>
+            <button class="text-sm text-white hover:text-emerald-400 transition font-medium">Cambiar</button>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 4: Datos y Privacidad -->
+    <div class="ft-section">
         <h3 class="text-lg font-semibold text-white mb-2">Datos y Privacidad</h3>
-        <p class="text-sm text-white/50 mb-6">Todos tus datos se almacenan de forma segura. Puedes exportarlos o eliminarlos permanentemente.</p>
+        <p class="text-sm text-white/50 mb-6">Todos tus datos se almacenan localmente. Puedes exportarlos o eliminarlos permanentemente.</p>
 
-        <div class="flex flex-col sm:flex-row gap-4">
-            <a asp-controller="Reports" asp-action="ExportPdf" class="ft-btn-secondary text-center flex-1 justify-center py-2.5">
-                <i class="bi bi-download mr-2"></i> Exportar datos
-            </a>
-            <a asp-page="DeletePersonalData" class="flex-1 text-center py-2.5 px-4 rounded-lg font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors">
-                <i class="bi bi-trash mr-2"></i> Eliminar cuenta
+        <div class="flex gap-4">
+            <a asp-controller="Reports"
+               asp-action="ExportPdf"
+               class="ft-btn-secondary w-full text-center flex-1 flex items-center justify-center">
+                Exportar datos
+            </a>>
+            <a asp-page="DeletePersonalData" class="ft-btn bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 flex-1">
+                Eliminar cuenta
             </a>
         </div>
     </div>
 
-    <!-- SECCIÓN 4: Cerrar Sesión -->
-    <div class="ft-section flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <!-- Cerrar Sesión -->
+    <div class="ft-section flex items-center justify-between">
         <div>
-            <h3 class="font-semibold text-white mb-1">Cerrar Sesión</h3>
+            <h3 class="font-medium text-white">Cerrar Sesión</h3>
             <p class="text-sm text-white/50">Salir de tu cuenta en este dispositivo</p>
         </div>
-        <form class="w-full sm:w-auto" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Dashboard", new { area = "" })">
-            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-lg font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors border border-red-600 shadow-sm">
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Dashboard", new { area = "" })">
+            <button type="submit" class="ft-btn bg-red-500 text-white hover:bg-red-600 border-none font-semibold">
                 Cerrar Sesión
             </button>
         </form>

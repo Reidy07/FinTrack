@@ -1,21 +1,20 @@
 ﻿// FinTrack UI helpers (modals, small interactions)
 (() => {
-    const openModal = (id) => {
+    function openModal(id) {
         const el = document.getElementById(id);
         if (!el) return;
+
         el.classList.remove('hidden');
         el.setAttribute('aria-hidden', 'false');
-        const focusable = el.querySelector('input, select, textarea, button, a[href]');
-        focusable?.focus?.();
-    };
+    }
 
-    const closeModal = (id) => {
+    function closeModal(id) {
         const el = document.getElementById(id);
         if (!el) return;
+
         el.classList.add('hidden');
         el.setAttribute('aria-hidden', 'true');
-    };
-
+    }
     document.addEventListener('click', (e) => {
         const openBtn = e.target.closest('[data-modal-open]');
         if (openBtn) {

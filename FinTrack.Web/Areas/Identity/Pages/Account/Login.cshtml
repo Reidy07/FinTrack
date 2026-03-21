@@ -2,79 +2,77 @@
 @model LoginModel
 @{
     ViewData["Title"] = "Iniciar sesión";
+    Layout = "/Views/Shared/_AuthLayout.cshtml";
 }
 
-<div class="w-full max-w-md">
-    <div class="rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-xl shadow-2xl p-6 md:p-8">
-        <div class="text-center">
-            <img src="~/images/fintrack-logo.jpg" asp-append-version="true"
-                 class="mx-auto ft-auth-logo"
-                 alt="FinTrack" />
+<section class="ft-login ft-login--compact">
+    <div class="ft-login__header">
+        <span class="ft-login__eyebrow">
+            <i class="bi bi-shield-lock"></i>
+            Acceso seguro
+        </span>
+    </div>
+    <form id="account" method="post" class="ft-login__form">
+        <div asp-validation-summary="ModelOnly" class="ft-validation" role="alert"></div>
 
-            <div class="mt-4">
-                <div class="text-xl font-semibold tracking-tight">FinTrack</div>
-                <div class="mt-1 text-sm text-white/55">Accede a tu panel financiero</div>
+        <div class="ft-login__field">
+            <label asp-for="Input.Email" class="ft-label"></label>
+            <div class="ft-input-wrap">
+                <span class="ft-input-icon">
+                    <i class="bi bi-envelope"></i>
+                </span>
+                <input asp-for="Input.Email"
+                       class="ft-input ft-input--with-icon"
+                       autocomplete="username"
+                       aria-required="true"
+                       placeholder="correo@ejemplo.com" />
             </div>
+            <span asp-validation-for="Input.Email" class="ft-validation"></span>
         </div>
 
-
-        <div class="mt-6">
-            <h1 class="text-2xl font-semibold">Bienvenido</h1>
-            <p class="mt-1 text-sm text-white/55">Inicia sesión para continuar.</p>
-        </div>
-
-        <div class="mt-6">
-            <form id="account" method="post" class="space-y-4">
-                <div asp-validation-summary="ModelOnly" class="text-sm text-red-200"></div>
-
-                <div>
-                    <label asp-for="Input.Email" class="block text-sm text-white/60 mb-2">Email</label>
-                    <input asp-for="Input.Email" class="ft-input w-full" autocomplete="username" />
-                    <span asp-validation-for="Input.Email" class="text-xs text-red-200"></span>
-                </div>
-
-                <div>
-                    <label asp-for="Input.Password" class="block text-sm text-white/60 mb-2">Contraseña</label>
-                    <div class="relative">
-                        <input asp-for="Input.Password" class="ft-input w-full pr-12" autocomplete="current-password" />
-                        <button type="button" id="togglePwd"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                    <span asp-validation-for="Input.Password" class="text-xs text-red-200"></span>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <label class="inline-flex items-center gap-2 text-sm text-white/70">
-                        <input asp-for="Input.RememberMe" class="accent-emerald-400" />
-                        Recordarme
-                    </label>
-
-                    <a asp-page="./ForgotPassword" class="text-sm text-emerald-200 hover:text-emerald-100">
-                        ¿Olvidaste tu contraseña?
-                    </a>
-                </div>
-
-                <button type="submit" class="ft-btn-primary w-full justify-center py-3">
-                    Iniciar sesión
+        <div class="ft-login__field">
+            <div class="ft-login__label-row">
+                <label asp-for="Input.Password" class="ft-label"></label>
+                <button type="button" id="togglePwd"
+                        class="righ-2 top-1/2 -translate-y-1/2 px-3 py-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5">
+                    <i class="bi bi-eye"></i>
                 </button>
+            </div>
 
-                <div class="pt-3 text-center text-sm text-white/60">
-                    ¿No tienes cuenta?
-                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl"
-                       class="text-emerald-200 hover:text-emerald-100 font-medium">
-                        Crear cuenta
-                    </a>
-                </div>
-            </form>
+            <div class="ft-input-wrap">
+                <span class="ft-input-icon">
+                    <i class="bi bi-lock"></i>
+                </span>
+                <input asp-for="Input.Password"
+                       class="ft-input ft-input--with-icon"
+                       autocomplete="current-password"
+                       aria-required="true"
+                       placeholder="Tu contraseña" />
+            </div>
+            <div class=" absft-login__label-row">
+                <a id="forgot-password" asp-page="./ForgotPassword" class="ft-login__link">
+                    ¿Olvidaste tu contraseña?
+                </a>
+            </div>
+            <span asp-validation-for="Input.Password" class="ft-validation"></span>
         </div>
-    </div>
 
-    <div class="mt-6 text-center text-xs text-white/45">
-        © @DateTime.Now.Year FinTrack — Controla tu dinero con claridad.
-    </div>
-</div>
+
+        <button id="login-submit" type="submit" class="ft-btn ft-btn-primary ft-btn-block ft-login__submit">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Iniciar sesión
+        </button>
+
+        <div class="ft-login__footer">
+            <p class="ft-text-muted">
+                ¿No tienes cuenta?
+                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="ft-login__link">
+                    Regístrate
+                </a>
+            </p>
+        </div>
+    </form>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

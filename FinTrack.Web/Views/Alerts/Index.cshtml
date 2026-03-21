@@ -41,21 +41,12 @@
         document.addEventListener('DOMContentLoaded', async function () {
             const userId = document.getElementById('hdnUserId').value;
             const apiUrl = document.getElementById('hdnApiUrl').value;
-
-            // Limpiamos la URL base para evitar dobles barras
-            const cleanApiUrl = apiUrl.replace(/\/$/, "");
-
             const container = document.getElementById('alertsContainer');
 
             try {
-                // LLAMADA A AL API DE ALERTAS
-                const response = await fetch(`${cleanApiUrl}/api/alerts?userId=${userId}`);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error("API error fetching alerts:", response.status, response.statusText, errorText);
-                    throw new Error('Error en la red o la API no respondió correctamente.');
-                }
+                // LLAMADA A TU NUEVA API DE ALERTAS
+                const response = await fetch(`${apiUrl}/api/alerts?userId=${userId}`);
+                if (!response.ok) throw new Error('Error en la red');
 
                 const alerts = await response.json();
                 container.innerHTML = ''; // Limpiar el loading
@@ -110,7 +101,7 @@
 
             } catch (error) {
                 console.error("Error obteniendo alertas:", error);
-                container.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200">Hubo un problema al cargar las alertas. Verifica que la API esté encendida y que la configuración del puerto sea correcta. Detalles: ${error.message}</div>`;
+                container.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200">Hubo un problema al cargar las alertas. Verifica que la API esté encendida.</div>`;
             }
         });
     </script>
