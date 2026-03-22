@@ -1,4 +1,4 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

@@ -1,4 +1,4 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Alerts;
 
 namespace FinTrack.Core.Interfaces.Services
 {

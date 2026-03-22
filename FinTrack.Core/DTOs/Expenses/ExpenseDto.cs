@@ -1,5 +1,4 @@
-﻿
-namespace FinTrack.Core.DTOs
+﻿namespace FinTrack.Core.DTOs.Expenses
 {
     public class ExpenseDto
     {

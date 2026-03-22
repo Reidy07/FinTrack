@@ -1,0 +1,179 @@
+﻿@{
+    ViewData["Title"] = "Asistente IA";
+}
+
+<div class="ft-page flex flex-col h-[calc(100vh-120px)]">
+    <!-- Header -->
+    <div class="ft-header shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="h-12 w-12 rounded-2xl flex items-center justify-center bg-emerald-400/20 border border-emerald-400/40 shadow-[0_0_15px_rgba(52,211,153,0.3)] relative">
+                <i class="bi bi-robot text-emerald-400 text-2xl"></i>
+                <span class="absolute top-0 right-0 h-3 w-3 bg-emerald-400 border-2 border-[#070A12] rounded-full animate-pulse"></span>
+            </div>
+            <div>
+                <div class="ft-header-title">FinBot AI</div>
+                <div class="ft-header-sub">Tu asesor financiero personal</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Box -->
+    <section class="ft-section flex-1 flex flex-col overflow-hidden p-0 relative">
+        <!-- Área de Mensajes -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+
+            <!-- Mensaje Inicial de FinBot -->
+            <div class="flex items-start gap-4">
+                <div class="h-10 w-10 shrink-0 rounded-xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center">
+                    <i class="bi bi-robot text-emerald-400"></i>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 max-w-[85%] sm:max-w-[75%]">
+                    <p class="text-sm text-white/90 leading-relaxed">
+                        ¡Hola! Soy FinBot, tu inteligencia artificial financiera.
+                        Conozco tus ingresos, gastos y balance actuales. ¿En qué te puedo ayudar hoy? ¿Quieres un consejo de ahorro o analizar tus gastos?
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <br />
+
+        <!-- Indicador de "Escribiendo..." (Oculto por defecto) -->
+        <div id="typingIndicator" class="hidden px-6 pb-2">
+            <div class="flex items-center gap-2 text-white/40 text-sm">
+                <i class="bi bi-robot"></i> FinBot está escribiendo<span class="animate-bounce">.</span><span class="animate-bounce" style="animation-delay: 0.1s">.</span><span class="animate-bounce" style="animation-delay: 0.2s">.</span>
+            </div>
+        </div>
+
+        <!-- Área de Input -->
+        <div class="p-4 border-t border-white/10 bg-white/[0.02] shrink-0">
+            <form id="chatForm" class="flex items-center gap-3">
+                <input type="text" id="userInput" class="ft-input !rounded-full flex-1" placeholder="Escribe tu pregunta aquí..." autocomplete="off" />
+
+                <button type="submit" id="btnSend" class="h-12 w-12 shrink-0 rounded-full bg-emerald-400 text-black flex items-center justify-center hover:bg-emerald-300 transition-all hover:scale-105 shadow-[0_0_15px_rgba(52,211,153,0.4)]">
+                    <i class="bi bi-send-fill text-lg ml-1"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+    /* Efecto de fade in para mensajes nuevos */
+    .msg-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('chatForm');
+            const input = document.getElementById('userInput');
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingIndicator = document.getElementById('typingIndicator');
+            const btnSend = document.getElementById('btnSend');
+
+            // Función para hacer scroll abajo
+            const scrollToBottom = () => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            };
+
+            // Convertir texto plano con Markdown básico (**negritas**) a HTML
+            const formatText = (text) => {
+                return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                           .replace(/\n/g, '<br/>');
+            };
+
+            const appendMessage = (text, isUser) => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `flex items-start gap-4 msg-fade-in ${isUser ? 'flex-row-reverse' : ''}`;
+
+                const avatarHTML = isUser
+                    ? `<div class="h-10 w-10 shrink-0 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center"><i class="bi bi-person text-white"></i></div>`
+                    : `<div class="h-10 w-10 shrink-0 rounded-xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center"><i class="bi bi-robot text-emerald-400"></i></div>`;
+
+                const bubbleHTML = isUser
+                    ? `<div class="bg-blue-500/20 border border-blue-500/30 rounded-2xl rounded-tr-sm p-4 max-w-[85%] sm:max-w-[75%]"><p class="text-sm text-white/90 leading-relaxed">${text}</p></div>`
+                    : `<div class="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 max-w-[85%] sm:max-w-[75%]"><p class="text-sm text-white/90 leading-relaxed">${formatText(text)}</p></div>`;
+
+                msgDiv.innerHTML = avatarHTML + bubbleHTML;
+                messagesContainer.appendChild(msgDiv);
+                scrollToBottom();
+            };
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const message = input.value.trim();
+                if (!message) return;
+
+                // 1. Mostrar mensaje del usuario
+                appendMessage(message, true);
+                input.value = '';
+
+                // 2. Bloquear input y mostrar "Escribiendo..."
+                input.disabled = true;
+                btnSend.disabled = true;
+                typingIndicator.classList.remove('hidden');
+                scrollToBottom();
+
+                // 3. Llamada al Web Controller (que llamará a la API)
+                try {
+                    const response = await fetch('/Chatbot/SendMessage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ UserMessage: message })
+                    });
+
+                    const data = await response.json();
+
+                    typingIndicator.classList.add('hidden');
+                    input.disabled = false;
+                    btnSend.disabled = false;
+                    input.focus();
+
+                    // 4. Mostrar respuesta de la IA
+                    if (data.success) {
+                        appendMessage(data.reply, false);
+                    } else {
+                        appendMessage("Hubo un error al procesar tu mensaje.", false);
+                    }
+                } catch (error) {
+                    typingIndicator.classList.add('hidden');
+                    input.disabled = false;
+                    btnSend.disabled = false;
+                    appendMessage("Error de red. Asegúrate de que la API esté encendida.", false);
+                }
+            });
+        });
+    </script>
+}

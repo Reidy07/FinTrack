@@ -27,6 +27,7 @@ namespace FinTrack.Infrastructure.Extensions
             services.AddScoped<IPredictionService, PredictionService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IGeminiPredictionService, GeminiPredictionService>();
+            services.AddScoped<IAIChatbotService, AIChatbotService>();
 
             return services;
         }

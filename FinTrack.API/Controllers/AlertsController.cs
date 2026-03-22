@@ -1,4 +1,4 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Alerts;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 

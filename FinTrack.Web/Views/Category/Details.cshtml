@@ -1,0 +1,155 @@
+﻿@using FinTrack.Core.DTOs.Category
+@model CategoryDetailDto
+
+@{
+    ViewData["Title"] = "Detalles de Categoría";
+    var icon = Model.Type == "Income" ? "bi-cash-stack" : "bi-coin";
+    var typeName = Model.Type == "Income" ? "Ingresos" : "Gastos";
+    var bgHex = string.IsNullOrWhiteSpace(Model.Color) ? "#3498db" : Model.Color;
+    var maxMonthly = Model.MonthlyTotals.Any() ? Model.MonthlyTotals.Values.Max() : 0;
+}
+
+<div class="ft-page">
+    <!-- HEADER -->
+    <div class="ft-header">
+        <div class="flex items-center gap-4">
+            <div class="h-14 w-14 rounded-2xl flex shrink-0 items-center justify-center shadow-inner"
+                 style="background: @(bgHex)15; border: 1px solid @(bgHex)40;">
+                <i class="bi @icon text-2xl" style="color: @bgHex;"></i>
+            </div>
+            <div>
+                <div class="ft-header-title">@Model.CategoryName</div>
+                <div class="ft-header-sub">Reporte detallado de @typeName</div>
+            </div>
+        </div>
+
+        <a asp-action="Index" class="ft-btn-secondary shrink-0">
+            <i class="bi bi-arrow-left"></i>
+            <span class="hidden sm:inline">Volver</span>
+        </a>
+    </div>
+
+    <!-- MÉTRICAS (KPIs) 100% ANCHO -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="ft-kpi relative overflow-hidden group">
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                 style="background: radial-gradient(circle at top right, @(bgHex)15, transparent 70%);"></div>
+            <div class="ft-kpi-title">Mes Actual</div>
+            <div class="ft-kpi-value" style="color: @bgHex;">@Model.CurrentMonthAmount.ToString("C")</div>
+        </div>
+
+        <div class="ft-kpi">
+            <div class="ft-kpi-title">Mes Anterior</div>
+            <div class="ft-kpi-value text-white/90">@Model.PreviousMonthAmount.ToString("C")</div>
+        </div>
+
+        <div class="ft-kpi">
+            <div class="ft-kpi-title">Total Histórico</div>
+            <div class="ft-kpi-value text-white/90">@Model.TotalAmount.ToString("C")</div>
+        </div>
+    </div>
+
+    @if (Model.MonthlyTotals.Any())
+    {
+        <!-- GRÁFICO DE TENDENCIA (BARRAS VERTICALES) 100% ANCHO -->
+        <div class="ft-section">
+            <!-- ARREGLADO: Usamos border-b en lugar de ft-divider para que la línea quede ABAJO -->
+            <div class="flex items-center justify-between mb-6 pb-3 border-b border-white/10">
+                <h3 class="text-lg font-semibold tracking-tight">Tendencia últimos 6 meses</h3>
+                <i class="bi bi-bar-chart-line text-white/40"></i>
+            </div>
+
+            <!-- Contenedor del gráfico de barras -->
+            <div class="flex items-end justify-between h-32 gap-2 mt-4">
+                @{
+                    // Tomamos los últimos 6 y los volvemos a invertir para que queden en orden cronológico (Izq a Der)
+                    var last6Months = Model.MonthlyTotals.Reverse().Take(6).Reverse();
+                }
+
+                @foreach (var m in last6Months)
+                {
+                    var percentage = maxMonthly > 0 ? (m.Value / maxMonthly) * 100 : 0;
+
+                    <!-- ARREGLADO: Agregué 'relative' aquí para que el tooltip se posicione bien -->
+                    <div class="flex flex-col items-center flex-1 group cursor-default relative">
+
+                        <!-- Tooltip (Monto) que aparece al hacer hover -->
+                        <span class="text-xs text-transparent group-hover:text-white transition-colors duration-300 mb-2 font-medium bg-black/50 px-2 py-1 rounded-md absolute -top-8 opacity-0 group-hover:opacity-100">
+                            @m.Value.ToString("C0")
+                        </span>
+
+                        <!-- Barra -->
+                        <div class="w-full max-w-[3rem] bg-white/5 rounded-t-lg relative flex items-end justify-center h-full border-x border-t border-white/5 overflow-hidden">
+                            <div class="w-full rounded-t-sm transition-all duration-1000 ease-out"
+                                 style="height: @(percentage)%; background: linear-gradient(to top, @(bgHex)80, @(bgHex)); box-shadow: 0 0 15px @(bgHex)40;">
+                            </div>
+                        </div>
+
+                        <!-- Etiqueta del Mes -->
+                        <span class="text-xs text-white/50 mt-3 font-medium tracking-wide uppercase">
+                            @(m.Key.Length >= 3 ? m.Key.Substring(0, 3) : m.Key)
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- TABLA DE TRANSACCIONES (100% ANCHO) -->
+    <div class="ft-section">
+        <!-- ARREGLADO: Usamos border-b en lugar de ft-divider para que la línea quede ABAJO -->
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+            <h3 class="text-lg font-semibold tracking-tight">Detalle de Transacciones</h3>
+            <span class="ft-badge">
+                <span class="ft-badge-dot" style="background-color: @bgHex;"></span>
+                @Model.Transactions.Count registros
+            </span>
+        </div>
+
+        @if (Model.Transactions.Any())
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-white/40 border-b border-white/10">
+                            <th class="text-left py-3 font-medium pr-4 w-1/4">Fecha</th>
+                            <th class="text-left py-3 font-medium pr-4 w-1/2">Descripción</th>
+                            <th class="text-right py-3 font-medium pl-4 w-1/4">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        @foreach (var t in Model.Transactions)
+                        {
+                            var isIncome = t.TransactionType == "Ingreso";
+                            var amountColor = isIncome ? "text-emerald-400" : "text-white/90";
+                            var amountSign = isIncome ? "+" : "-";
+
+                            <tr class="hover:bg-white/[0.03] transition">
+                                <td class="py-4 pr-4 text-white/60">@t.Date.ToString("dd MMM yyyy")</td>
+                                <td class="py-4 pr-4 font-medium text-white/90">
+                                    <div class="flex items-center gap-2">
+                                        <i class="bi @(isIncome ? "bi-arrow-down-left text-emerald-400/50" : "bi-arrow-up-right text-red-400/50") text-xs"></i>
+                                        @t.Description
+                                    </div>
+                                </td>
+                                <td class="py-4 pl-4 text-right font-semibold @amountColor">
+                                    @amountSign@t.Amount.ToString("C")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="ft-empty border-none bg-transparent py-10">
+                <div class="mx-auto h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                    <i class="bi bi-clock-history text-2xl text-white/40"></i>
+                </div>
+                <div class="ft-empty-title">Sin movimientos</div>
+                <div class="ft-empty-sub">Aún no hay transacciones registradas en esta categoría.</div>
+            </div>
+        }
+    </div>
+</div>

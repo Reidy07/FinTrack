@@ -1,5 +1,4 @@
-﻿
-namespace FinTrack.Core.DTOs
+﻿namespace FinTrack.Core.DTOs.Alerts
 {
     public class AlertDto
     {

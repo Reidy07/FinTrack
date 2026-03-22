@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Category;
+using FinTrack.Core.DTOs.Incomes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

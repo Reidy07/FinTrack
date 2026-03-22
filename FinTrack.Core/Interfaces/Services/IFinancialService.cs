@@ -1,4 +1,9 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Alerts;
+using FinTrack.Core.DTOs.Category;
+using FinTrack.Core.DTOs.Dashboard;
+using FinTrack.Core.DTOs.Expenses;
+using FinTrack.Core.DTOs.Incomes;
+using FinTrack.Core.DTOs.Reports;
 
 namespace FinTrack.Core.Interfaces.Services
 {

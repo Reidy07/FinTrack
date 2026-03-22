@@ -1,4 +1,7 @@
-﻿namespace FinTrack.Core.DTOs
+﻿using FinTrack.Core.DTOs.Alerts;
+using FinTrack.Core.DTOs.Category;
+
+namespace FinTrack.Core.DTOs.Dashboard
 {
     public class DashboardSummaryDto
     {

@@ -1,4 +1,5 @@
-﻿@model IEnumerable<FinTrack.Core.DTOs.CategoryDto>
+﻿@model IEnumerable<CategoryDto>
+@using FinTrack.Core.DTOs.Category
 @using FinTrack.Core.Enum
 
 @{
@@ -53,21 +54,26 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" class="p-1.5 text-white/50 hover:text-white transition-colors rounded-md hover:bg-white/10"
+                                <div class="flex items-center justify-end gap-2 shrink-0">
+                                    <a asp-action="Details" asp-route-id="@c.Id" class="ft-btn-ghost px-3 py-2 text-sm" title="Ver Detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    <button type="button" class="ft-btn-ghost px-3 py-2 text-sm"
                                             data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
-                                            data-modal-open="editCategoryModal">
+                                            data-modal-open="editCategoryModal" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
 
-                                    <form asp-action="Delete" method="post" class="inline m-0">
+                                    <form asp-action="Delete" method="post" class="m-0 p-0" onsubmit="return confirm('¿Eliminar esta categoría? Se conservarán los ingresos.');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@c.Id" />
-                                        <button type="submit" class="p-1.5 text-red-400/70 hover:text-red-400 transition-colors rounded-md hover:bg-red-400/10">
+                                        <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>
+
                             </div>
 
                             @if (!string.IsNullOrWhiteSpace(c.Description))
@@ -119,21 +125,26 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" class="p-1.5 text-white/50 hover:text-white transition-colors rounded-md hover:bg-white/10"
+                                <div class="flex items-center justify-end gap-2 shrink-0">
+                                    <a asp-action="Details" asp-route-id="@c.Id" class="ft-btn-ghost px-3 py-2 text-sm" title="Ver Detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    <button type="button" class="ft-btn-ghost px-3 py-2 text-sm"
                                             data-edit='@System.Text.Json.JsonSerializer.Serialize(c)'
-                                            data-modal-open="editCategoryModal">
+                                            data-modal-open="editCategoryModal" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
 
-                                    <form asp-action="Delete" method="post" class="inline m-0">
+                                    <form asp-action="Delete" method="post" class="m-0 p-0" onsubmit="return confirm('¿Eliminar esta categoría? Se conservarán los ingresos.');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@c.Id" />
-                                        <button type="submit" class="p-1.5 text-red-400/70 hover:text-red-400 transition-colors rounded-md hover:bg-red-400/10">
+                                        <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </div>
+
                             </div>
 
                             @if (!string.IsNullOrWhiteSpace(c.Description))

@@ -1,4 +1,9 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Alerts;
+using FinTrack.Core.DTOs.Category;
+using FinTrack.Core.DTOs.Dashboard;
+using FinTrack.Core.DTOs.Expenses;
+using FinTrack.Core.DTOs.Incomes;
+using FinTrack.Core.DTOs.Reports;
 using FinTrack.Core.Entities;
 using FinTrack.Core.Enum;
 using FinTrack.Core.Interfaces;
@@ -27,6 +32,22 @@ namespace FinTrack.Core.Services
 
             await unitOfWork.Expenses.AddAsync(expense);
             await unitOfWork.CompleteAsync();
+
+            // Verificar si el gasto dejó el balance en negativo y generar alerta si es así.
+            var currentBalance = await GetCurrentBalanceAsync(userId);
+            if (currentBalance < 0)
+            {
+                await unitOfWork.Alerts.AddAsync(new Alert
+                {
+                    UserId = userId,
+                    Title = "¡Cuidado! Balance en rojo",
+                    Message = $"Tu último gasto de {dto.Amount:C} ha dejado tu cuenta en negativo ({currentBalance:C}). Revisa tus finanzas.",
+                    Type = AlertType.UnusualSpending,
+                    Severity = AlertSeverity.Critical,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await unitOfWork.CompleteAsync();
+            }
 
             dto.Id = expense.Id;
 
@@ -385,9 +406,7 @@ namespace FinTrack.Core.Services
             var totalInc = incomes.Sum(i => i.Amount);
 
             // 2. BALANCE HISTÓRICO ACUMULADO
-            var allHistoricalExpenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date <= endOfMonth);
-            var allHistoricalIncomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date <= endOfMonth);
-            var accumulatedBalance = allHistoricalIncomes.Sum(i => i.Amount) - allHistoricalExpenses.Sum(e => e.Amount);
+            var accumulatedBalance = await GetCurrentBalanceAsync(userId);
 
             // 3. Datos para el Gráfico (Últimos 6 meses)
             var chartLabels = new List<string>();
@@ -440,7 +459,7 @@ namespace FinTrack.Core.Services
                 .OrderByDescending(c => c.Amount) // Ordenamos de la categoría con más gasto a la de menos
                 .ToList();
 
-            // 6. Retornamos mapeando exactamente todo tu DTO
+            // 6. Retornamos mapeando exactamente todo el DTO
             return new DashboardSummaryDto
             {
                 TotalExpenses = totalExp,
@@ -456,15 +475,12 @@ namespace FinTrack.Core.Services
 
         public async Task<decimal> GetCurrentBalanceAsync(string userId)
         {
-            // Suma de ingresos
-            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId);
-            var totalIncome = incomes.Sum(i => i.Amount);
+            var now = DateTime.Now;
+            // Solo tomamos en cuenta los ingresos y gastos hasta hoy
+            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date <= now);
+            var expenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date <= now);
 
-            // Suma de gastos
-            var expenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId);
-            var totalExpense = expenses.Sum(e => e.Amount);
-
-            return totalIncome - totalExpense;
+            return incomes.Sum(i => i.Amount) - expenses.Sum(e => e.Amount);
         }
 
         public async Task<IEnumerable<AlertDto>> GetAlertsAsync(string userId)

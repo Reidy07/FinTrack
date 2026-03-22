@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Category;
+using FinTrack.Core.DTOs.Reports;
 using FinTrack.Core.Interfaces;
 using FinTrack.Core.Interfaces.Services;
 

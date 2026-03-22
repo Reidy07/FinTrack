@@ -1,4 +1,5 @@
-﻿@model IEnumerable<FinTrack.Core.DTOs.ExpenseDto>
+﻿@using FinTrack.Core.DTOs.Expenses
+@model IEnumerable<ExpenseDto>
 @{
     ViewData["Title"] = "Gastos";
     var total = Model?.Sum(x => x.Amount) ?? 0m;

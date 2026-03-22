@@ -1,6 +1,6 @@
 ﻿using FinTrack.Core.Enum;
 
-namespace FinTrack.Core.DTOs
+namespace FinTrack.Core.DTOs.Category
 {
     public class CategoryDto
     {

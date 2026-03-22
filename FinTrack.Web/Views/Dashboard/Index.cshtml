@@ -1,9 +1,10 @@
-﻿﻿@using Microsoft.AspNetCore.Identity
+﻿﻿@using FinTrack.Core.DTOs.Dashboard
 @using FinTrack.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-@model FinTrack.Core.DTOs.DashboardSummaryDto
+@model DashboardSummaryDto
 @using System.Text.Json
 @{
     ViewData["Title"] = "Dashboard";

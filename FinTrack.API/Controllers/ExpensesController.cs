@@ -1,4 +1,4 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.DTOs.Expenses;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
