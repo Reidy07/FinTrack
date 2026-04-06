@@ -33,7 +33,7 @@
                            placeholder="Buscar ingresos por descripción o categoría..." />
                 </div>
 
-                <select id="categoryFilter" class="ft-input">
+                <select id="categoryFilter" class="ft-input bg-dark">
                     <option value="">Todas las categorías</option>
                     @if (ViewBag.Categories is IEnumerable<SelectListItem> items)
                     {
@@ -71,7 +71,7 @@
                                 <td class="py-4 pr-4">
                                     <div class="flex items-center gap-3">
                                         <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                            <i class="bi bi-cash-coin text-emerald-300"></i>
+                                            <i class="fa-solid fa-arrow-trend-up"></i>
                                         </div>
                                         <div class="min-w-0">
                                             <div class="font-semibold text-white truncate">@item.Description</div>
@@ -100,13 +100,13 @@
                                 <td class="py-4 pl-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <a class="ft-btn-ghost px-3 py-2 text-sm" asp-action="Edit" asp-route-id="@item.Id" title="Editar">
-                                            <i class="bi bi-pencil"></i>
+                                            <i class="fa-solid fa-pencil"></i>
                                         </a>
 
                                         <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('¿Eliminar este ingreso?');" class="m-0 p-0">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
+                                                <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -147,7 +147,7 @@
             </div>
 
             <button type="button" class="ft-btn-ghost px-3 py-2" data-modal-close="newIncomeModal" aria-label="Cerrar">
-                <i class="bi bi-x-lg"></i>
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
@@ -175,7 +175,7 @@
 
             <div>
                 <label class="block text-sm text-white/60 mb-2">Categoría</label>
-                <select name="CategoryId" class="ft-input" required>
+                <select name="CategoryId" class="ft-input bg-dark" required>
                     <option value="">Selecciona una categoría</option>
                     @if (ViewBag.Categories is IEnumerable<SelectListItem> cats)
                     {

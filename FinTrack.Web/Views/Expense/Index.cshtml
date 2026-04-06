@@ -71,7 +71,7 @@
                                 <td class="py-4 pr-4">
                                     <div class="flex items-center gap-3">
                                         <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                            <i class="bi bi-bag text-amber-300"></i>
+                                            <i class="fa-solid fa-arrow-trend-down"></i>
                                         </div>
                                         <div class="min-w-0">
                                             <div class="font-semibold text-white truncate flex items-center gap-2">
@@ -107,13 +107,13 @@
                                 <td class="py-4 pl-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <a class="ft-btn-ghost px-3 py-2 text-sm" asp-action="Edit" asp-route-id="@item.Id" title="Editar">
-                                            <i class="bi bi-pencil"></i>
+                                            <i class="fa-solid fa-pencil"></i>
                                         </a>
 
                                         <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('¿Eliminar este gasto?');" class="m-0 p-0">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="ft-btn-ghost text-red-400 px-3 py-2 text-sm" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
+                                                <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -154,7 +154,7 @@
             </div>
 
             <button type="button" class="ft-btn-ghost px-3 py-2" data-modal-close="newExpenseModal" aria-label="Cerrar">
-                <i class="bi bi-x-lg"></i>
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
@@ -181,7 +181,7 @@
 
             <div>
                 <label class="block text-sm text-white/60 mb-2">Categoría</label>
-                <select name="CategoryId" class="ft-input" asp-items="ViewBag.Categories" required>
+                <select name="CategoryId" class="ft-input bg-dark" asp-items="ViewBag.Categories" required>
                     <option value="">Selecciona una categoría</option>
                 </select>
             </div>
@@ -195,7 +195,7 @@
 
                 <div id="modalPatternWrapper" style="display: none;">
                     <label class="block text-sm text-white/60 mb-2">Frecuencia</label>
-                    <select name="RecurringPattern" class="ft-input">
+                    <select name="RecurringPattern" class="ft-input bg-dark">
                         <option value="">Selecciona la frecuencia</option>
                         <option value="Diario">Diario</option>
                         <option value="Semanal">Semanal</option>

@@ -8,6 +8,7 @@ using FinTrack.Core.Entities;
 using FinTrack.Core.Enum;
 using FinTrack.Core.Interfaces;
 using FinTrack.Core.Interfaces.Services;
+using System.Globalization;
 
 
 namespace FinTrack.Core.Services
@@ -170,27 +171,40 @@ namespace FinTrack.Core.Services
                 CategoryId = dto.CategoryId,
                 UserId = userId
             };
+
             await unitOfWork.Incomes.AddAsync(income);
             await unitOfWork.CompleteAsync();
+
+            dto.Id = income.Id;
+
+            var cat = await unitOfWork.Categories.GetByIdAsync(dto.CategoryId);
+            dto.CategoryName = cat?.Name ?? dto.CategoryName ?? "Sin categoría";
+
             return dto;
         }
 
         public async Task<IEnumerable<IncomeDto>> GetIncomesByUserAsync(string userId, DateTime? startDate, DateTime? endDate)
         {
-            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId);
-            var categories = await unitOfWork.Categories.FindAsync(c => c.UserId == userId);
+            var incomes = await unitOfWork.Incomes.FindAsync(i =>
+                i.UserId == userId
+                && (!startDate.HasValue || i.Date >= startDate.Value)
+                && (!endDate.HasValue || i.Date <= endDate.Value)
+            );
 
+            var categories = await unitOfWork.Categories.FindAsync(c => c.UserId == userId);
             var catMap = categories.ToDictionary(c => c.Id, c => c.Name);
 
-            return incomes.Select(i => new IncomeDto
-            {
-                Id = i.Id,
-                Amount = i.Amount,
-                Description = i.Description,
-                Date = i.Date,
-                CategoryId = i.CategoryId,
-                CategoryName = catMap.TryGetValue(i.CategoryId, out var name) ? name : "Sin categoría"
-            });
+            return incomes
+                .OrderByDescending(i => i.Date)
+                .Select(i => new IncomeDto
+                {
+                    Id = i.Id,
+                    Amount = i.Amount,
+                    Description = i.Description,
+                    Date = i.Date,
+                    CategoryId = i.CategoryId,
+                    CategoryName = catMap.TryGetValue(i.CategoryId, out var name) ? name : "Sin categoría"
+                });
         }
 
         public async Task<IncomeDto?> GetIncomeByIdAsync(int id, string userId)
@@ -395,40 +409,100 @@ namespace FinTrack.Core.Services
         public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(string userId, DateTime? dateRef)
         {
             var referenceDate = dateRef ?? DateTime.Now;
+
             var startOfMonth = new DateTime(referenceDate.Year, referenceDate.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
 
-            // 1. Totales del Mes actual (Entradas y salidas de este mes)
-            var expenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date >= startOfMonth && e.Date <= endOfMonth);
-            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date >= startOfMonth && i.Date <= endOfMonth);
+            var startOfChartRange = new DateTime(referenceDate.Year, referenceDate.Month, 1).AddMonths(-5);
+            var endOfChartRange = endOfMonth;
 
-            var totalExp = expenses.Sum(e => e.Amount);
-            var totalInc = incomes.Sum(i => i.Amount);
+            var monthExpenses = await unitOfWork.Expenses.FindAsync(e =>
+                e.UserId == userId &&
+                e.Date >= startOfMonth &&
+                e.Date <= endOfMonth);
 
-            // 2. BALANCE HISTÓRICO ACUMULADO
-            var accumulatedBalance = await GetCurrentBalanceAsync(userId);
+            var monthIncomes = await unitOfWork.Incomes.FindAsync(i =>
+                i.UserId == userId &&
+                i.Date >= startOfMonth &&
+                i.Date <= endOfMonth);
 
-            // 3. Datos para el Gráfico (Últimos 6 meses)
+            var rangeExpenses = await unitOfWork.Expenses.FindAsync(e =>
+                e.UserId == userId &&
+                e.Date >= startOfChartRange &&
+                e.Date <= endOfChartRange);
+
+            var rangeIncomes = await unitOfWork.Incomes.FindAsync(i =>
+                i.UserId == userId &&
+                i.Date >= startOfChartRange &&
+                i.Date <= endOfChartRange);
+
+            var categories = await unitOfWork.Categories.FindAsync(c => c.UserId == userId);
+            var alerts = await unitOfWork.Alerts.FindAsync(a => a.UserId == userId);
+
+            var totalExpenses = monthExpenses.Sum(e => e.Amount);
+            var totalIncome = monthIncomes.Sum(i => i.Amount);
+            var balance = totalIncome - totalExpenses;
+
+            var expenseGroupsByMonth = rangeExpenses
+                .GroupBy(e => new { e.Date.Year, e.Date.Month })
+                .ToDictionary(
+                    g => $"{g.Key.Year}-{g.Key.Month}",
+                    g => g.Sum(x => x.Amount));
+
+            var incomeGroupsByMonth = rangeIncomes
+                .GroupBy(i => new { i.Date.Year, i.Date.Month })
+                .ToDictionary(
+                    g => $"{g.Key.Year}-{g.Key.Month}",
+                    g => g.Sum(x => x.Amount));
+
             var chartLabels = new List<string>();
             var chartIncome = new List<decimal>();
             var chartExpense = new List<decimal>();
 
+            var culture = new CultureInfo("es-DO");
+
             for (int i = 5; i >= 0; i--)
             {
-                var date = referenceDate.AddMonths(-i);
-                var monthStart = new DateTime(date.Year, date.Month, 1);
-                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                var date = startOfMonth.AddMonths(-i);
+                var key = $"{date.Year}-{date.Month}";
+                var label = culture.TextInfo.ToTitleCase(
+                    date.ToString("MMM", culture).TrimEnd('.').ToLower()
+                );
 
-                var monthlyExp = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date >= monthStart && e.Date <= monthEnd);
-                var monthlyInc = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date >= monthStart && i.Date <= monthEnd);
-
-                chartLabels.Add(date.ToString("MMM"));
-                chartIncome.Add(monthlyInc.Sum(x => x.Amount));
-                chartExpense.Add(monthlyExp.Sum(x => x.Amount));
+                chartLabels.Add(label);
+                chartIncome.Add(incomeGroupsByMonth.TryGetValue(key, out var inc) ? inc : 0);
+                chartExpense.Add(expenseGroupsByMonth.TryGetValue(key, out var exp) ? exp : 0);
             }
 
-            // 4. Alertas recientes (Top 3)
-            var alerts = await unitOfWork.Alerts.FindAsync(a => a.UserId == userId);
+            var categoryMap = categories.ToDictionary(c => c.Id, c => c);
+
+            var categorySummaries = monthExpenses
+                .GroupBy(e => e.CategoryId)
+                .Select(g =>
+                {
+                    var amount = g.Sum(x => x.Amount);
+
+                    var categoryName = categoryMap.TryGetValue(g.Key, out var category)
+                        ? category.Name
+                        : "Sin categoría";
+
+                    var categoryColor = categoryMap.TryGetValue(g.Key, out category)
+                        ? (string.IsNullOrWhiteSpace(category.Color) ? "#22c55e" : category.Color)
+                        : "#22c55e";
+
+                    return new CategorySummaryDto
+                    {
+                        CategoryName = categoryName,
+                        Amount = amount,
+                        Percentage = totalExpenses > 0
+                            ? Math.Round((amount / totalExpenses) * 100, 2)
+                            : 0,
+                        Color = categoryColor
+                    };
+                })
+                .OrderByDescending(x => x.Amount)
+                .ToList();
+
             var recentAlerts = alerts
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(3)
@@ -443,28 +517,11 @@ namespace FinTrack.Core.Services
                 })
                 .ToList();
 
-            // 5. Resumen por Categorías
-            var categories = await unitOfWork.Categories.GetAllAsync();
-            var catMap = categories.ToDictionary(c => c.Id, c => c.Name);
-
-            var categorySummaries = expenses
-                .GroupBy(e => e.CategoryId)
-                .Select(g => new CategorySummaryDto
-                {
-                    CategoryName = catMap.TryGetValue(g.Key, out var name) ? name : "General",
-                    Amount = g.Sum(e => e.Amount),
-                    // Calculamos el porcentaje respecto al total gastado en el mes
-                    Percentage = totalExp > 0 ? Math.Round((g.Sum(e => e.Amount) / totalExp) * 100, 2) : 0
-                })
-                .OrderByDescending(c => c.Amount) // Ordenamos de la categoría con más gasto a la de menos
-                .ToList();
-
-            // 6. Retornamos mapeando exactamente todo el DTO
             return new DashboardSummaryDto
             {
-                TotalExpenses = totalExp,
-                TotalIncome = totalInc,
-                Balance = accumulatedBalance,
+                TotalExpenses = totalExpenses,
+                TotalIncome = totalIncome,
+                Balance = balance,
                 ChartLabels = chartLabels,
                 ChartIncomeData = chartIncome,
                 ChartExpenseData = chartExpense,
@@ -475,12 +532,13 @@ namespace FinTrack.Core.Services
 
         public async Task<decimal> GetCurrentBalanceAsync(string userId)
         {
-            var now = DateTime.Now;
-            // Solo tomamos en cuenta los ingresos y gastos hasta hoy
-            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date <= now);
-            var expenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date <= now);
+            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId);
+            var expenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId);
 
-            return incomes.Sum(i => i.Amount) - expenses.Sum(e => e.Amount);
+            var totalIncome = incomes.Sum(i => i.Amount);
+            var totalExpense = expenses.Sum(e => e.Amount);
+
+            return totalIncome - totalExpense;
         }
 
         public async Task<IEnumerable<AlertDto>> GetAlertsAsync(string userId)

@@ -41,3 +41,86 @@
         if (open?.id) closeModal(open.id);
     });
 })();
+
+// =============================================
+// SIDEBAR BEHAVIOR - FinTrack
+// =============================================
+
+(function () {
+    function initSidebar() {
+        const sidebar = document.querySelector(".ft-sidebar");
+        const overlay = document.querySelector(".ft-sidebar-overlay");
+        const toggleBtn = document.querySelector(".ft-sidebar-toggle");
+        const closeBtn = document.querySelector(".ft-sidebar-close");
+
+        console.log("Sidebar init:", {
+            sidebar,
+            overlay,
+            toggleBtn,
+            closeBtn
+        });
+
+        if (!sidebar || !toggleBtn) {
+            console.warn("No se encontró sidebar o toggle.");
+            return;
+        }
+
+        function openSidebar() {
+            sidebar.classList.add("open");
+            if (overlay) overlay.classList.add("active");
+            document.body.classList.add("no-scroll");
+            console.log("openSidebar");
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove("open");
+            if (overlay) overlay.classList.remove("active");
+            document.body.classList.remove("no-scroll");
+            console.log("closeSidebar");
+        }
+
+        toggleBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (sidebar.classList.contains("open")) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                closeSidebar();
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener("click", function () {
+                closeSidebar();
+            });
+        }
+
+        sidebar.querySelectorAll("a").forEach(function (link) {
+            link.addEventListener("click", function () {
+                closeSidebar();
+            });
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                closeSidebar();
+            }
+        });
+
+        closeSidebar();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initSidebar);
+    } else {
+        initSidebar();
+    }
+})();

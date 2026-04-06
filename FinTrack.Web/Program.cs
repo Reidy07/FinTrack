@@ -10,8 +10,6 @@ using FinTrack.Infrastructure.Services;
 using System.Globalization;
 
 
-
-
 namespace FinTrack.Web
 {
     public class Program
@@ -50,6 +48,7 @@ namespace FinTrack.Web
             });
 
             var app = builder.Build();
+
 
             if (app.Environment.IsDevelopment())
             {
