@@ -12,8 +12,24 @@ using FinTrack.Core.Interfaces.Services;
 
 namespace FinTrack.Core.Services
 {
-    public class FinancialService(IUnitOfWork unitOfWork) : IFinancialService
+    public class FinancialService : IFinancialService
     {
+        private readonly IUnitOfWork unitOfWork;
+        private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
+        private readonly IEmailTemplateService _templateService;
+
+        public FinancialService(
+            IUnitOfWork unitOfWork,
+            IEmailService emailService,
+            IUserService userService,
+            IEmailTemplateService templateService)
+        {
+            this.unitOfWork = unitOfWork;
+            _emailService = emailService;
+            _userService = userService;
+            _templateService = templateService;
+        }
 
         // --- GASTOS ---
 
@@ -33,20 +49,36 @@ namespace FinTrack.Core.Services
             await unitOfWork.Expenses.AddAsync(expense);
             await unitOfWork.CompleteAsync();
 
-            // Verificar si el gasto dejó el balance en negativo y generar alerta si es así.
+            // 1. Verificar balance negativo.
             var currentBalance = await GetCurrentBalanceAsync(userId);
             if (currentBalance < 0)
             {
+                var alertTitle = "¡Cuidado! Balance en rojo";
+                var alertMsg = $"Tu último gasto de {dto.Amount:C} ha dejado tu cuenta en negativo ({currentBalance:C}). Revisa tus finanzas.";
+
                 await unitOfWork.Alerts.AddAsync(new Alert
                 {
                     UserId = userId,
-                    Title = "¡Cuidado! Balance en rojo",
-                    Message = $"Tu último gasto de {dto.Amount:C} ha dejado tu cuenta en negativo ({currentBalance:C}). Revisa tus finanzas.",
+                    Title = alertTitle,
+                    Message = alertMsg,
                     Type = AlertType.UnusualSpending,
                     Severity = AlertSeverity.Critical,
                     CreatedAt = DateTime.UtcNow
                 });
                 await unitOfWork.CompleteAsync();
+
+                // Enviar el correo de Balance Negativo con la plantilla HTML
+                var userEmail = await _userService.GetUserEmailAsync(userId);
+                if (!string.IsNullOrEmpty(userEmail))
+                {
+                    var alertHtml = await _templateService.GetAlertTemplateAsync(
+                        title: alertTitle,
+                        message: alertMsg,
+                        actionUrl: "https://localhost:7127/Dashboard",
+                        actionText: "Ir al Dashboard");
+
+                    await _emailService.SendEmailAsync(userEmail, alertTitle, alertHtml);
+                }
             }
 
             dto.Id = expense.Id;
@@ -55,7 +87,7 @@ namespace FinTrack.Core.Services
             var cat = await unitOfWork.Categories.GetByIdAsync(dto.CategoryId);
             dto.CategoryName = cat?.Name ?? dto.CategoryName ?? "General";
 
-            // Revisar si excede el presupuesto
+            // 2. Revisar si el gasto excede el presupuesto.
             var budgets = await unitOfWork.Budgets.FindAsync(b => b.CategoryId == dto.CategoryId && b.UserId == userId);
             var budget = budgets.FirstOrDefault(b => b.StartDate <= dto.Date && b.EndDate >= dto.Date);
 
@@ -68,16 +100,32 @@ namespace FinTrack.Core.Services
 
                 if (totalSpent > budget.Amount)
                 {
+                    var budgetTitle = "¡Presupuesto Excedido!";
+                    var budgetMsg = $"Has superado tu presupuesto de {budget.Amount:C} para la categoría '{budget.Category?.Name ?? "General"}'. Llevas gastado {totalSpent:C}.";
+
                     await unitOfWork.Alerts.AddAsync(new Alert
                     {
                         UserId = userId,
-                        Title = "¡Presupuesto Excedido!",
-                        Message = $"Has superado tu presupuesto de {budget.Amount:C} para la categoría '{budget.Category?.Name ?? "General"}'. Llevas gastado {totalSpent:C}.",
+                        Title = budgetTitle,
+                        Message = budgetMsg,
                         Type = AlertType.BudgetExceeded,
                         Severity = AlertSeverity.Warning,
                         CreatedAt = DateTime.UtcNow
                     });
                     await unitOfWork.CompleteAsync();
+
+                    // Enviar también un correo si se excede el presupuesto
+                    var userEmail = await _userService.GetUserEmailAsync(userId);
+                    if (!string.IsNullOrEmpty(userEmail))
+                    {
+                        var alertHtml = await _templateService.GetAlertTemplateAsync(
+                            title: budgetTitle,
+                            message: budgetMsg,
+                            actionUrl: "https://localhost:7127/Dashboard",
+                            actionText: "Ver mis presupuestos");
+
+                        await _emailService.SendEmailAsync(userEmail, budgetTitle, alertHtml);
+                    }
                 }
             }
 
@@ -405,7 +453,7 @@ namespace FinTrack.Core.Services
             var totalExp = expenses.Sum(e => e.Amount);
             var totalInc = incomes.Sum(i => i.Amount);
 
-            // 2. BALANCE HISTÓRICO ACUMULADO
+            // 2. Balance histórico acumulado
             var accumulatedBalance = await GetCurrentBalanceAsync(userId);
 
             // 3. Datos para el Gráfico (Últimos 6 meses)
@@ -453,6 +501,7 @@ namespace FinTrack.Core.Services
                 {
                     CategoryName = catMap.TryGetValue(g.Key, out var name) ? name : "General",
                     Amount = g.Sum(e => e.Amount),
+
                     // Calculamos el porcentaje respecto al total gastado en el mes
                     Percentage = totalExp > 0 ? Math.Round((g.Sum(e => e.Amount) / totalExp) * 100, 2) : 0
                 })

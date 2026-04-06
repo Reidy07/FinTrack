@@ -28,7 +28,7 @@ namespace FinTrack.Web
 
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
             {
-                options.SignIn.RequireConfirmedAccount = false;
+                options.SignIn.RequireConfirmedAccount = true;
                 options.Password.RequireDigit = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
@@ -48,6 +48,8 @@ namespace FinTrack.Web
             {
                 client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]!);
             });
+
+            builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, FinTrack.Infrastructure.Services.EmailSender>();
 
             var app = builder.Build();
 

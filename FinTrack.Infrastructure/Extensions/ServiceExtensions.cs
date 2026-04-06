@@ -28,6 +28,10 @@ namespace FinTrack.Infrastructure.Extensions
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IGeminiPredictionService, GeminiPredictionService>();
             services.AddScoped<IAIChatbotService, AIChatbotService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddTransient<IEmailService, FinTrack.Infrastructure.Services.EmailSender>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+
 
             return services;
         }

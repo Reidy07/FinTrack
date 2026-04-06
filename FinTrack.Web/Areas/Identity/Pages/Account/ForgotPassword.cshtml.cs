@@ -55,26 +55,47 @@ namespace FinTrack.Web.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(Input.Email);
-                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+
+                // 1. Si el usuario NO existe, fingimos que todo salió bien (Seguridad OWASP contra Enumeración)
+                if (user == null)
                 {
-                    // Don't reveal that the user does not exist or is not confirmed
                     return RedirectToPage("./ForgotPasswordConfirmation");
                 }
 
-                // For more information on how to enable account confirmation and password reset please
-                // visit https://go.microsoft.com/fwlink/?LinkID=532713
-                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                var callbackUrl = Url.Page(
+                // 2. Si el usuario SÍ existe pero NO ha confirmado su correo
+                if (!(await _userManager.IsEmailConfirmedAsync(user)))
+                {
+                    // Le reenviamos el correo de confirmación de cuenta.
+                    var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    confirmCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmCode));
+
+                    var confirmCallbackUrl = Url.Page(
+                        "/Account/ConfirmEmail",
+                        pageHandler: null,
+                        values: new { area = "Identity", userId = user.Id, code = confirmCode },
+                        protocol: Request.Scheme);
+
+                    await _emailSender.SendEmailAsync(
+                        Input.Email,
+                        "Acción Requerida: Confirma tu cuenta de FinTrack",
+                        $"Hola. Notamos que intentaste recuperar tu contraseña, pero tu cuenta aún no está confirmada. Por favor, confirma tu correo haciendo clic <a href='{HtmlEncoder.Default.Encode(confirmCallbackUrl)}'>aquí</a> para poder continuar.");
+
+                    return RedirectToPage("./ForgotPasswordConfirmation");
+                }
+
+                var resetCode = await _userManager.GeneratePasswordResetTokenAsync(user);
+                resetCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetCode));
+
+                var resetCallbackUrl = Url.Page(
                     "/Account/ResetPassword",
                     pageHandler: null,
-                    values: new { area = "Identity", code },
+                    values: new { area = "Identity", code = resetCode },
                     protocol: Request.Scheme);
 
                 await _emailSender.SendEmailAsync(
                     Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    "Restablece tu contraseña de FinTrack",
+                    $"Para restablecer tu contraseña, haz clic <a href='{HtmlEncoder.Default.Encode(resetCallbackUrl)}'>aquí</a>.");
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }
