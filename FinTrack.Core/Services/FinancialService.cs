@@ -10,11 +10,26 @@ using FinTrack.Core.Interfaces;
 using FinTrack.Core.Interfaces.Services;
 using System.Globalization;
 
-
 namespace FinTrack.Core.Services
 {
-    public class FinancialService(IUnitOfWork unitOfWork) : IFinancialService
+    public class FinancialService : IFinancialService
     {
+        private readonly IUnitOfWork unitOfWork;
+        private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
+        private readonly IEmailTemplateService _templateService;
+
+        public FinancialService(
+            IUnitOfWork unitOfWork,
+            IEmailService emailService,
+            IUserService userService,
+            IEmailTemplateService templateService)
+        {
+            this.unitOfWork = unitOfWork;
+            _emailService = emailService;
+            _userService = userService;
+            _templateService = templateService;
+        }
 
         // --- GASTOS ---
 
@@ -34,51 +49,81 @@ namespace FinTrack.Core.Services
             await unitOfWork.Expenses.AddAsync(expense);
             await unitOfWork.CompleteAsync();
 
-            // Verificar si el gasto dejó el balance en negativo y generar alerta si es así.
             var currentBalance = await GetCurrentBalanceAsync(userId);
             if (currentBalance < 0)
             {
+                var alertTitle = "¡Cuidado! Balance en rojo";
+                var alertMsg = $"Tu último gasto de {dto.Amount:C} ha dejado tu cuenta en negativo ({currentBalance:C}). Revisa tus finanzas.";
+
                 await unitOfWork.Alerts.AddAsync(new Alert
                 {
                     UserId = userId,
-                    Title = "¡Cuidado! Balance en rojo",
-                    Message = $"Tu último gasto de {dto.Amount:C} ha dejado tu cuenta en negativo ({currentBalance:C}). Revisa tus finanzas.",
+                    Title = alertTitle,
+                    Message = alertMsg,
                     Type = AlertType.UnusualSpending,
                     Severity = AlertSeverity.Critical,
                     CreatedAt = DateTime.UtcNow
                 });
                 await unitOfWork.CompleteAsync();
+
+                var userEmail = await _userService.GetUserEmailAsync(userId);
+                if (!string.IsNullOrEmpty(userEmail))
+                {
+                    var alertHtml = await _templateService.GetAlertTemplateAsync(
+                        title: alertTitle,
+                        message: alertMsg,
+                        actionUrl: "https://localhost:7127/Dashboard",
+                        actionText: "Ir al Dashboard");
+
+                    await _emailService.SendEmailAsync(userEmail, alertTitle, alertHtml);
+                }
             }
 
             dto.Id = expense.Id;
 
-            // Devolver nombre de categoría si existe
             var cat = await unitOfWork.Categories.GetByIdAsync(dto.CategoryId);
             dto.CategoryName = cat?.Name ?? dto.CategoryName ?? "General";
 
-            // Revisar si excede el presupuesto
             var budgets = await unitOfWork.Budgets.FindAsync(b => b.CategoryId == dto.CategoryId && b.UserId == userId);
             var budget = budgets.FirstOrDefault(b => b.StartDate <= dto.Date && b.EndDate >= dto.Date);
 
             if (budget != null)
             {
                 var currentExpenses = await unitOfWork.Expenses.FindAsync(e =>
-                    e.CategoryId == dto.CategoryId && e.UserId == userId && e.Date >= budget.StartDate && e.Date <= budget.EndDate);
+                    e.CategoryId == dto.CategoryId &&
+                    e.UserId == userId &&
+                    e.Date >= budget.StartDate &&
+                    e.Date <= budget.EndDate);
 
                 var totalSpent = currentExpenses.Sum(e => e.Amount);
 
                 if (totalSpent > budget.Amount)
                 {
+                    var budgetTitle = "¡Presupuesto Excedido!";
+                    var budgetMsg = $"Has superado tu presupuesto de {budget.Amount:C} para la categoría '{budget.Category?.Name ?? "General"}'. Llevas gastado {totalSpent:C}.";
+
                     await unitOfWork.Alerts.AddAsync(new Alert
                     {
                         UserId = userId,
-                        Title = "¡Presupuesto Excedido!",
-                        Message = $"Has superado tu presupuesto de {budget.Amount:C} para la categoría '{budget.Category?.Name ?? "General"}'. Llevas gastado {totalSpent:C}.",
+                        Title = budgetTitle,
+                        Message = budgetMsg,
                         Type = AlertType.BudgetExceeded,
                         Severity = AlertSeverity.Warning,
                         CreatedAt = DateTime.UtcNow
                     });
                     await unitOfWork.CompleteAsync();
+
+                    var userEmail = await _userService.GetUserEmailAsync(userId);
+                    if (!string.IsNullOrEmpty(userEmail))
+                    {
+                        var alertHtml = await _templateService.GetAlertTemplateAsync(
+                            title: budgetTitle,
+                            message: budgetMsg,
+                            actionUrl: "https://localhost:7127/Dashboard",
+                            actionText: "Ver mis presupuestos");
+
+                        await _emailService.SendEmailAsync(userEmail, budgetTitle, alertHtml);
+                    }
                 }
             }
 
@@ -93,7 +138,6 @@ namespace FinTrack.Core.Services
                 && (!endDate.HasValue || e.Date <= endDate.Value)
             );
 
-            // Traemos categorías para mapear CategoryName sin N+1
             var categories = await unitOfWork.Categories.GetAllAsync();
             var catMap = categories.ToDictionary(c => c.Id, c => c.Name);
 
@@ -112,13 +156,14 @@ namespace FinTrack.Core.Services
                     RecurringPattern = e.RecurringPattern
                 });
         }
+
         public async Task<ExpenseDto?> GetExpenseByIdAsync(int id, string userId)
         {
             var expense = await unitOfWork.Expenses.GetByIdAsync(id);
             if (expense == null || expense.UserId != userId) return null;
 
             var cat = (await unitOfWork.Categories.GetAllAsync())
-            .FirstOrDefault(c => c.Id == expense.CategoryId);
+                .FirstOrDefault(c => c.Id == expense.CategoryId);
 
             return new ExpenseDto
             {
@@ -149,7 +194,6 @@ namespace FinTrack.Core.Services
             await unitOfWork.CompleteAsync();
         }
 
-
         public async Task DeleteExpenseAsync(int id, string userId)
         {
             var expense = await unitOfWork.Expenses.GetByIdAsync(id);
@@ -161,6 +205,7 @@ namespace FinTrack.Core.Services
         }
 
         // --- INGRESOS ---
+
         public async Task<IncomeDto> AddIncomeAsync(IncomeDto dto, string userId)
         {
             var income = new Income
@@ -236,7 +281,6 @@ namespace FinTrack.Core.Services
             await unitOfWork.CompleteAsync();
         }
 
-
         public async Task DeleteIncomeAsync(int id, string userId)
         {
             var income = await unitOfWork.Incomes.GetByIdAsync(id);
@@ -248,6 +292,7 @@ namespace FinTrack.Core.Services
         }
 
         // --- CATEGORÍAS ---
+
         public async Task<IEnumerable<CategoryDto>> GetCategoriesByUserAsync(string userId)
         {
             var categories = await unitOfWork.Categories.FindAsync(c => c.UserId == userId);
@@ -260,36 +305,51 @@ namespace FinTrack.Core.Services
                 Type = c.Type
             });
         }
+
         public async Task<CategoryDetailDto?> GetCategoryDetailsAsync(int categoryId, string userId)
         {
-            // 1. Buscamos la categoría
             var category = await unitOfWork.Categories.GetByIdAsync(categoryId);
             if (category == null || category.UserId != userId) return null;
 
-            // 2. Traemos todos sus gastos e ingresos asociados
             var expenses = await unitOfWork.Expenses.FindAsync(e => e.CategoryId == categoryId && e.UserId == userId);
             var incomes = await unitOfWork.Incomes.FindAsync(i => i.CategoryId == categoryId && i.UserId == userId);
 
-            // 3. Unificamos todo en una sola lista de "Transacciones"
             var transactions = new List<CategoryTransactionDto>();
-            transactions.AddRange(expenses.Select(e => new CategoryTransactionDto { Id = e.Id, Amount = e.Amount, Description = e.Description, Date = e.Date, TransactionType = "Gasto" }));
-            transactions.AddRange(incomes.Select(i => new CategoryTransactionDto { Id = i.Id, Amount = i.Amount, Description = i.Description, Date = i.Date, TransactionType = "Ingreso" }));
+            transactions.AddRange(expenses.Select(e => new CategoryTransactionDto
+            {
+                Id = e.Id,
+                Amount = e.Amount,
+                Description = e.Description,
+                Date = e.Date,
+                TransactionType = "Gasto"
+            }));
+            transactions.AddRange(incomes.Select(i => new CategoryTransactionDto
+            {
+                Id = i.Id,
+                Amount = i.Amount,
+                Description = i.Description,
+                Date = i.Date,
+                TransactionType = "Ingreso"
+            }));
 
             var orderedTransactions = transactions.OrderByDescending(t => t.Date).ToList();
             var totalAmount = orderedTransactions.Sum(t => t.Amount);
 
-            // 4. Calculamos Mes Actual y Mes Anterior
             var now = DateTime.Now;
-            var currentMonthTotal = orderedTransactions.Where(t => t.Date.Year == now.Year && t.Date.Month == now.Month).Sum(t => t.Amount);
+            var currentMonthTotal = orderedTransactions
+                .Where(t => t.Date.Year == now.Year && t.Date.Month == now.Month)
+                .Sum(t => t.Amount);
 
             var prevMonth = now.AddMonths(-1);
-            var previousMonthTotal = orderedTransactions.Where(t => t.Date.Year == prevMonth.Year && t.Date.Month == prevMonth.Month).Sum(t => t.Amount);
+            var previousMonthTotal = orderedTransactions
+                .Where(t => t.Date.Year == prevMonth.Year && t.Date.Month == prevMonth.Month)
+                .Sum(t => t.Amount);
 
-            // 5. Agrupamos por mes para gráficas o listas (Ej: "Ene 2026", "Feb 2026")
-            var culture = new System.Globalization.CultureInfo("es-ES");
+            var culture = new CultureInfo("es-ES");
             var monthlyTotals = orderedTransactions
                 .GroupBy(t => new { t.Date.Year, t.Date.Month })
-                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+                .OrderBy(g => g.Key.Year)
+                .ThenBy(g => g.Key.Month)
                 .ToDictionary(
                     g => new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy", culture).ToUpper(),
                     g => g.Sum(t => t.Amount)
@@ -326,6 +386,7 @@ namespace FinTrack.Core.Services
             dto.Id = category.Id;
             return dto;
         }
+
         public async Task<CategoryDto?> GetCategoryByIdAsync(int id, string userId)
         {
             var cat = await unitOfWork.Categories.GetByIdAsync(id);
@@ -365,10 +426,11 @@ namespace FinTrack.Core.Services
         }
 
         // --- PRESUPUESTOS ---
+
         public async Task<IEnumerable<BudgetDto>> GetBudgetsByUserAsync(string userId)
         {
             var budgets = await unitOfWork.Budgets.FindAsync(b => b.UserId == userId);
-            var categories = await unitOfWork.Categories.GetAllAsync(); // Cargar caché o mejorar query
+            var categories = await unitOfWork.Categories.GetAllAsync();
 
             return budgets.Select(b => new BudgetDto
             {
@@ -379,9 +441,8 @@ namespace FinTrack.Core.Services
                 EndDate = b.EndDate,
                 CategoryId = b.CategoryId,
                 CategoryName = b.CategoryId.HasValue
-    ? (categories.FirstOrDefault(c => c.Id == b.CategoryId)?.Name ?? "Sin categoría")
-    : "Global",
-
+                    ? (categories.FirstOrDefault(c => c.Id == b.CategoryId)?.Name ?? "Sin categoría")
+                    : "Global",
             });
         }
 
@@ -404,8 +465,8 @@ namespace FinTrack.Core.Services
             return dto;
         }
 
-
         // --- DASHBOARD ---
+
         public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(string userId, DateTime? dateRef)
         {
             var referenceDate = dateRef ?? DateTime.Now;
