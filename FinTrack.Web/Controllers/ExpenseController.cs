@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Category;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Category;
 using FinTrack.Core.DTOs.Expenses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,14 +22,10 @@ namespace FinTrack.Web.Controllers
 
         private async Task LoadExpenseCategoriesAsync(string userId)
         {
-            // Llamamos a la API de categorías
             var categories = await _httpClient.GetFromJsonAsync<IEnumerable<CategoryDto>>($"api/categories/user/{userId}");
-
             if (categories != null)
             {
-                ViewBag.Categories = new SelectList(
-                    categories.Where(c => c.Type == Core.Enum.CategoryType.Expense || c.Type == Core.Enum.CategoryType.Both),
-                    "Id", "Name");
+                ViewBag.Categories = new SelectList(categories.Where(c => c.Type == Core.Enum.CategoryType.Expense || c.Type == Core.Enum.CategoryType.Both), "Id", "Name");
             }
         }
 
@@ -37,7 +34,6 @@ namespace FinTrack.Web.Controllers
             var userId = GetUserId();
             var expenses = await _httpClient.GetFromJsonAsync<IEnumerable<ExpenseDto>>($"api/expenses/user/{userId}");
             await LoadExpenseCategoriesAsync(userId);
-
             return View(expenses);
         }
 
@@ -53,7 +49,6 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Create(ExpenseDto dto)
         {
             var userId = GetUserId();
-
             dto.UserId = userId;
 
             ModelState.Remove(nameof(dto.UserId));
@@ -61,17 +56,20 @@ namespace FinTrack.Web.Controllers
 
             if (!ModelState.IsValid)
             {
+                TempData[TempDataKeys.Warning] = ErrorMessages.RequiredField;
                 await LoadExpenseCategoriesAsync(userId);
                 return View(dto);
             }
 
-            // POST a la API
             var response = await _httpClient.PostAsJsonAsync($"api/expenses?userId={userId}", dto);
 
             if (response.IsSuccessStatusCode)
+            {
+                TempData[TempDataKeys.Success] = SuccessMessages.Created;
                 return RedirectToAction(nameof(Index));
+            }
 
-            ModelState.AddModelError("", "Error al guardar en la API.");
+            TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
             await LoadExpenseCategoriesAsync(userId);
             return View(dto);
         }
@@ -79,10 +77,13 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var userId = GetUserId();
-            // Pedimos el gasto a la API
             var expense = await _httpClient.GetFromJsonAsync<ExpenseDto>($"api/expenses/{id}?userId={userId}");
 
-            if (expense == null) return NotFound();
+            if (expense == null)
+            {
+                TempData[TempDataKeys.Error] = ErrorMessages.NotFound;
+                return RedirectToAction(nameof(Index));
+            }
 
             await LoadExpenseCategoriesAsync(userId);
             return View(expense);
@@ -100,6 +101,7 @@ namespace FinTrack.Web.Controllers
 
             if (!ModelState.IsValid)
             {
+                TempData[TempDataKeys.Warning] = ErrorMessages.RequiredField;
                 await LoadExpenseCategoriesAsync(userId);
                 return View(dto);
             }
@@ -107,20 +109,27 @@ namespace FinTrack.Web.Controllers
             var response = await _httpClient.PutAsJsonAsync($"api/expenses/{dto.Id}?userId={userId}", dto);
 
             if (response.IsSuccessStatusCode)
+            {
+                TempData[TempDataKeys.Success] = SuccessMessages.Updated;
                 return RedirectToAction(nameof(Index));
+            }
 
-            ModelState.AddModelError("", "Error al actualizar el gasto.");
+            TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
             await LoadExpenseCategoriesAsync(userId);
             return View(dto);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var userId = GetUserId();
-            // DELETE a la API
-            await _httpClient.DeleteAsync($"api/expenses/{id}?userId={userId}");
+            var response = await _httpClient.DeleteAsync($"api/expenses/{id}?userId={userId}");
+
+            if (response.IsSuccessStatusCode)
+                TempData[TempDataKeys.Success] = SuccessMessages.Deleted;
+            else
+                TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
+
             return RedirectToAction(nameof(Index));
         }
     }

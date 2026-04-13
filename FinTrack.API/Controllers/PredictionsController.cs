@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,9 @@ namespace FinTrack.API.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.UserId)) return BadRequest(ErrorMessages.UserIdRequired);
+
+
                 var result = await _predictionService.GetFinancialPredictionAsync(
                     request.UserId,
                     request.Priorities,
@@ -28,7 +32,7 @@ namespace FinTrack.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new { error = ErrorMessages.ApiSaveError });
             }
         }
     }

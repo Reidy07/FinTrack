@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Dashboard;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Dashboard;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +20,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("summary")]
         public async Task<ActionResult<DashboardSummaryDto>> GetSummary([FromQuery] string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("Falta el UserId");
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
 
             var summary = await _financialService.GetDashboardSummaryAsync(userId, DateTime.Now);
             return Ok(summary);
@@ -28,6 +29,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("prediction")]
         public async Task<ActionResult<decimal>> GetNextMonthPrediction([FromQuery] string userId)
         {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
             var prediction = await _predictionService.PredictNextMonthExpensesAsync(userId);
             return Ok(prediction);
         }

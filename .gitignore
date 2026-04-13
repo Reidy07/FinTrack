@@ -490,3 +490,5 @@ $RECYCLE.BIN/
 /FinTrack.Infrastructure/Migrations/20260318235028_InitialMigration.Designer.cs
 /FinTrack.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
 /FinTrack.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
+/FinTrack.Infrastructure/Migrations/20260412040239_InitialMigration.cs
+/FinTrack.Infrastructure/Migrations/20260412040239_InitialMigration.Designer.cs

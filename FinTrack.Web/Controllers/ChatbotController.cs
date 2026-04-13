@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Chatbot;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Chatbot;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -33,7 +34,7 @@ namespace FinTrack.Web.Controllers
                 return Json(new { success = true, reply = result?.Reply });
             }
 
-            return Json(new { success = false, reply = "Error al conectar con la API." });
+            return Json(new { success = false, reply = ErrorMessages.ApiSaveError });
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Category;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Category;
 using FinTrack.Core.DTOs.Reports;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("period-comparison")]
         public async Task<ActionResult<PeriodComparisonDto>> GetPeriodComparison([FromQuery] string userId, [FromQuery] int months = 6)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("El ID de usuario es requerido.");
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
 
             var result = await _reportService.GetPeriodComparisonAsync(userId, months);
             return Ok(result);
@@ -28,7 +29,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("balance-trend")]
         public async Task<ActionResult<BalanceTrendDto>> GetBalanceTrend([FromQuery] string userId, [FromQuery] int months = 6)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("El ID de usuario es requerido.");
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
 
             var result = await _reportService.GetBalanceTrendAsync(userId, months);
             return Ok(result);
@@ -36,7 +37,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("category-comparison")]
         public async Task<ActionResult<CategoryComparisonDto>> GetCategoryComparison([FromQuery] string userId, [FromQuery] int months = 6)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("El ID de usuario es requerido.");
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
 
             var result = await _reportService.GetCategoryComparisonAsync(userId, months);
             return Ok(result);

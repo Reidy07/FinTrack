@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Expenses;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Expenses;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpenses(string userId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
         {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
             var expenses = await _financialService.GetExpensesByUserAsync(userId, startDate, endDate);
             return Ok(expenses);
         }
@@ -26,7 +28,7 @@ namespace FinTrack.API.Controllers
         public async Task<ActionResult<ExpenseDto>> GetExpense(int id, [FromQuery] string userId)
         {
             var expense = await _financialService.GetExpenseByIdAsync(id, userId);
-            if (expense == null) return NotFound("Gasto no encontrado");
+            if (expense == null) return NotFound(ErrorMessages.NotFound);
 
             return Ok(expense);
         }
@@ -41,7 +43,7 @@ namespace FinTrack.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateExpense(int id, [FromBody] ExpenseDto dto, [FromQuery] string userId)
         {
-            if (id != dto.Id) return BadRequest("El ID del gasto no coincide.");
+            if (id != dto.Id) return BadRequest(ErrorMessages.IdMismatch);
 
             await _financialService.UpdateExpenseAsync(dto, userId);
             return NoContent();

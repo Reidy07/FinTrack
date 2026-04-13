@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.Entities;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.Entities;
 using FluentValidation;
 
 namespace FinTrack.Core.Validators
@@ -8,15 +9,15 @@ namespace FinTrack.Core.Validators
         public ExpenseValidator()
         {
             RuleFor(x => x.Amount)
-                .GreaterThan(0).WithMessage("El monto debe ser mayor a cero.")
-                .LessThanOrEqualTo(1000000000).WithMessage("El monto no puede exceder $1,000,000,000");
+                .GreaterThan(0).WithMessage(ErrorMessages.AmountGreaterThanZero)
+                .LessThanOrEqualTo(1000000000).WithMessage(ErrorMessages.MaxAmountExceeded);
 
             RuleFor(x => x.Description)
-                .NotEmpty().WithMessage("La descripción es obligatoria.")
-                .MaximumLength(200).WithMessage("La descripción no puede exceder 200 caracteres.");
+                .NotEmpty().WithMessage(ErrorMessages.RequiredDescription)
+                .MaximumLength(200).WithMessage(ErrorMessages.MaxLength200);
 
             RuleFor(x => x.Date)
-                .LessThanOrEqualTo(DateTime.Now).WithMessage("La fecha no puede ser futura.");
+                .LessThanOrEqualTo(DateTime.Now).WithMessage(ErrorMessages.FutureDateNotAllowed);
         }
     }
 }

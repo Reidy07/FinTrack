@@ -9,6 +9,7 @@ using FinTrack.Core.Enum;
 using FinTrack.Core.Interfaces;
 using FinTrack.Core.Interfaces.Services;
 using System.Globalization;
+using FinTrack.Core.Constants;
 
 namespace FinTrack.Core.Services
 {
@@ -470,100 +471,39 @@ namespace FinTrack.Core.Services
         public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(string userId, DateTime? dateRef)
         {
             var referenceDate = dateRef ?? DateTime.Now;
-
             var startOfMonth = new DateTime(referenceDate.Year, referenceDate.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
 
-            var startOfChartRange = new DateTime(referenceDate.Year, referenceDate.Month, 1).AddMonths(-5);
-            var endOfChartRange = endOfMonth;
+            var expenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date >= startOfMonth && e.Date <= endOfMonth);
+            var incomes = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date >= startOfMonth && i.Date <= endOfMonth);
 
-            var monthExpenses = await unitOfWork.Expenses.FindAsync(e =>
-                e.UserId == userId &&
-                e.Date >= startOfMonth &&
-                e.Date <= endOfMonth);
+            var totalExp = expenses.Sum(e => e.Amount);
+            var totalInc = incomes.Sum(i => i.Amount);
 
-            var monthIncomes = await unitOfWork.Incomes.FindAsync(i =>
-                i.UserId == userId &&
-                i.Date >= startOfMonth &&
-                i.Date <= endOfMonth);
+            // 1. Balance Histórico Acumulado (Usando el método que ignora el futuro)
+            var accumulatedBalance = await GetCurrentBalanceAsync(userId);
 
-            var rangeExpenses = await unitOfWork.Expenses.FindAsync(e =>
-                e.UserId == userId &&
-                e.Date >= startOfChartRange &&
-                e.Date <= endOfChartRange);
-
-            var rangeIncomes = await unitOfWork.Incomes.FindAsync(i =>
-                i.UserId == userId &&
-                i.Date >= startOfChartRange &&
-                i.Date <= endOfChartRange);
-
-            var categories = await unitOfWork.Categories.FindAsync(c => c.UserId == userId);
-            var alerts = await unitOfWork.Alerts.FindAsync(a => a.UserId == userId);
-
-            var totalExpenses = monthExpenses.Sum(e => e.Amount);
-            var totalIncome = monthIncomes.Sum(i => i.Amount);
-            var balance = totalIncome - totalExpenses;
-
-            var expenseGroupsByMonth = rangeExpenses
-                .GroupBy(e => new { e.Date.Year, e.Date.Month })
-                .ToDictionary(
-                    g => $"{g.Key.Year}-{g.Key.Month}",
-                    g => g.Sum(x => x.Amount));
-
-            var incomeGroupsByMonth = rangeIncomes
-                .GroupBy(i => new { i.Date.Year, i.Date.Month })
-                .ToDictionary(
-                    g => $"{g.Key.Year}-{g.Key.Month}",
-                    g => g.Sum(x => x.Amount));
-
+            // 2. Datos para el Gráfico
             var chartLabels = new List<string>();
             var chartIncome = new List<decimal>();
             var chartExpense = new List<decimal>();
 
-            var culture = new CultureInfo("es-DO");
-
             for (int i = 5; i >= 0; i--)
             {
-                var date = startOfMonth.AddMonths(-i);
-                var key = $"{date.Year}-{date.Month}";
-                var label = culture.TextInfo.ToTitleCase(
-                    date.ToString("MMM", culture).TrimEnd('.').ToLower()
-                );
+                var date = referenceDate.AddMonths(-i);
+                var monthStart = new DateTime(date.Year, date.Month, 1);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
 
-                chartLabels.Add(label);
-                chartIncome.Add(incomeGroupsByMonth.TryGetValue(key, out var inc) ? inc : 0);
-                chartExpense.Add(expenseGroupsByMonth.TryGetValue(key, out var exp) ? exp : 0);
+                var monthlyExp = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId && e.Date >= monthStart && e.Date <= monthEnd);
+                var monthlyInc = await unitOfWork.Incomes.FindAsync(i => i.UserId == userId && i.Date >= monthStart && i.Date <= monthEnd);
+
+                chartLabels.Add(date.ToString("MMM yy"));
+                chartIncome.Add(monthlyInc.Sum(x => x.Amount));
+                chartExpense.Add(monthlyExp.Sum(x => x.Amount));
             }
 
-            var categoryMap = categories.ToDictionary(c => c.Id, c => c);
-
-            var categorySummaries = monthExpenses
-                .GroupBy(e => e.CategoryId)
-                .Select(g =>
-                {
-                    var amount = g.Sum(x => x.Amount);
-
-                    var categoryName = categoryMap.TryGetValue(g.Key, out var category)
-                        ? category.Name
-                        : "Sin categoría";
-
-                    var categoryColor = categoryMap.TryGetValue(g.Key, out category)
-                        ? (string.IsNullOrWhiteSpace(category.Color) ? "#22c55e" : category.Color)
-                        : "#22c55e";
-
-                    return new CategorySummaryDto
-                    {
-                        CategoryName = categoryName,
-                        Amount = amount,
-                        Percentage = totalExpenses > 0
-                            ? Math.Round((amount / totalExpenses) * 100, 2)
-                            : 0,
-                        Color = categoryColor
-                    };
-                })
-                .OrderByDescending(x => x.Amount)
-                .ToList();
-
+            // 3. Alertas recientes
+            var alerts = await unitOfWork.Alerts.FindAsync(a => a.UserId == userId);
             var recentAlerts = alerts
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(3)
@@ -575,19 +515,95 @@ namespace FinTrack.Core.Services
                     Severity = a.Severity.ToString(),
                     CreatedAt = a.CreatedAt,
                     IsRead = a.IsRead
+                }).ToList();
+
+            // 4. Resumen por Categorías
+            var categories = await unitOfWork.Categories.GetAllAsync();
+            var catMap = categories.ToDictionary(c => c.Id, c => c);
+
+            var categorySummaries = expenses
+                .GroupBy(e => e.CategoryId)
+                .Select(g => new CategorySummaryDto
+                {
+                    CategoryName = catMap.TryGetValue(g.Key, out var cat) ? cat.Name : "General",
+                    Color = catMap.TryGetValue(g.Key, out var catColor) ? (string.IsNullOrWhiteSpace(catColor.Color) ? "#3498db" : catColor.Color) : "#3498db",
+                    Amount = g.Sum(e => e.Amount),
+                    Percentage = totalExp > 0 ? Math.Round((g.Sum(e => e.Amount) / totalExp) * 100, 2) : 0
                 })
+                .OrderByDescending(c => c.Amount)
                 .ToList();
+
+            // 5. Pagos Recurrentes
+            var allExpenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId);
+            var upcomingPayments = allExpenses
+                .Where(e => e.IsRecurring)
+                .OrderByDescending(e => e.Date)
+                .Take(3)
+                .Select(e => new ExpenseDto { Description = e.Description, Amount = e.Amount, RecurringPattern = e.RecurringPattern })
+                .ToList();
+
+            // 6. Consejo de la IA Local
+            string quickTip = InsightMessages.Default;
+
+            if (totalExp == 0 && totalInc == 0)
+            {
+                // Escenario A: Usuario Nuevo
+                quickTip = InsightMessages.NewUser;
+            }
+            else if (accumulatedBalance < 0)
+            {
+                // Escenario B: Deuda Crítica
+                quickTip = InsightMessages.CriticalDebt;
+            }
+            else if (categorySummaries.Any(c => c.Percentage >= 40 &&
+                     !c.CategoryName.ToLower().Contains("renta") &&
+                     !c.CategoryName.ToLower().Contains("alquiler") &&
+                     !c.CategoryName.ToLower().Contains("vivienda")))
+            {
+                // Escenario C: Anomalía de consumo
+                var topCat = categorySummaries.First(c => c.Percentage >= 40);
+
+                // Inyectamos las variables usando string.Format
+                quickTip = string.Format(InsightMessages.SpendingAnomaly, topCat.CategoryName, topCat.Percentage);
+            }
+            else
+            {
+                // Escenario D: Análisis de Fondo de Emergencia y Regla 50/30/20
+                var pastExpenses = await unitOfWork.Expenses.FindAsync(e => e.UserId == userId);
+
+                var avgMonthlyExpense = pastExpenses.Any()
+                    ? pastExpenses.GroupBy(e => new { e.Date.Year, e.Date.Month }).Average(g => g.Sum(e => e.Amount))
+                    : 0;
+
+                var emergencyFundGoal = avgMonthlyExpense * 3;
+
+                if (avgMonthlyExpense > 0 && accumulatedBalance < emergencyFundGoal)
+                {
+                    // Inyectamos la variable del dinero formateada como moneda
+                    quickTip = string.Format(InsightMessages.EmergencyFundGoal, emergencyFundGoal.ToString("C"));
+                }
+                else if (totalInc > 0 && totalExp < (totalInc * 0.5m))
+                {
+                    quickTip = InsightMessages.HighLiquidity;
+                }
+                else if (totalInc > 0 && totalExp > (totalInc * 0.8m))
+                {
+                    quickTip = InsightMessages.LowMargin;
+                }
+            }
 
             return new DashboardSummaryDto
             {
-                TotalExpenses = totalExpenses,
-                TotalIncome = totalIncome,
-                Balance = balance,
+                TotalExpenses = totalExp,
+                TotalIncome = totalInc,
+                Balance = accumulatedBalance,
                 ChartLabels = chartLabels,
                 ChartIncomeData = chartIncome,
                 ChartExpenseData = chartExpense,
                 RecentAlerts = recentAlerts,
-                CategorySummaries = categorySummaries
+                CategorySummaries = categorySummaries,
+                UpcomingPayments = upcomingPayments,
+                QuickTip = quickTip
             };
         }
 

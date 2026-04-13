@@ -8,7 +8,7 @@ namespace FinTrack.Core.Services
     {
         private readonly IFinancialService _financialService;
 
-        private readonly string _geminiApiKey = "AIzaSyCsGssNLtyMmKmmzwIgnZdnZ5NaTFndEno";
+        private readonly string _geminiApiKey = "PRIVATE";
 
         public AIChatbotService(IFinancialService financialService)
         {
@@ -64,7 +64,7 @@ namespace FinTrack.Core.Services
                 // SI FALLA, AHORA VEREMOS EL POR QUÉ:
                 if (!response.IsSuccessStatusCode)
                 {
-                    return $"⚠️ **Error de Google ({(int)response.StatusCode})**: {responseData}";
+                    return $" **Error de Google ({(int)response.StatusCode})**: {responseData}";
                 }
 
                 using var jsonDoc = JsonDocument.Parse(responseData);

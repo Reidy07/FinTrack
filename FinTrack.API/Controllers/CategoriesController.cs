@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Category;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Category;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,7 @@ namespace FinTrack.API.Controllers
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories(string userId)
         {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
             var categories = await _financialService.GetCategoriesByUserAsync(userId);
             return Ok(categories);
         }
@@ -26,7 +28,7 @@ namespace FinTrack.API.Controllers
         public async Task<ActionResult<CategoryDto>> GetCategory(int id, [FromQuery] string userId)
         {
             var category = await _financialService.GetCategoryByIdAsync(id, userId);
-            if (category == null) return NotFound();
+            if (category == null) return NotFound(ErrorMessages.NotFound);
             return Ok(category);
         }
 
@@ -34,7 +36,7 @@ namespace FinTrack.API.Controllers
         public async Task<ActionResult<CategoryDetailDto>> GetCategoryDetails(int id, [FromQuery] string userId)
         {
             var details = await _financialService.GetCategoryDetailsAsync(id, userId);
-            if (details == null) return NotFound("Categoría no encontrada o sin permisos.");
+            if (details == null) return NotFound(ErrorMessages.NotFound);
 
             return Ok(details);
         }

@@ -1,0 +1,138 @@
+﻿@using FinTrack.Core.Constants
+@{
+    var successMsg = TempData[TempDataKeys.Success]?.ToString();
+    var errorMsg = TempData[TempDataKeys.Error]?.ToString();
+    var warningMsg = TempData[TempDataKeys.Warning]?.ToString();
+}
+
+<style>
+    /* CSS PURO: Garantiza que se vea perfecto sin depender del compilador de Tailwind */
+    .ft-toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
+    }
+    .ft-toast-item {
+        pointer-events: auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background-color: rgba(7, 10, 18, 0.95);
+        backdrop-filter: blur(16px);
+        padding: 16px;
+        border-radius: 16px;
+        width: 320px;
+        transform: translateX(120%);
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ft-toast-item.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    /* Colores y Sombras por Tipo */
+    .ft-toast-success { border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: 0 10px 40px rgba(16, 185, 129, 0.15); }
+    .ft-toast-error { border: 1px solid rgba(248, 113, 113, 0.3); box-shadow: 0 10px 40px rgba(248, 113, 113, 0.15); }
+    .ft-toast-warning { border: 1px solid rgba(245, 158, 11, 0.3); box-shadow: 0 10px 40px rgba(245, 158, 11, 0.15); }
+
+    /* Íconos */
+    .ft-toast-icon {
+        height: 32px;
+        width: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .ft-icon-success { background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
+    .ft-icon-error { background: rgba(248, 113, 113, 0.2); border: 1px solid rgba(248, 113, 113, 0.3); color: #f87171; }
+    .ft-icon-warning { background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; }
+
+    /* Textos */
+    .ft-toast-content { flex: 1; margin-top: 2px; }
+    .ft-toast-title { font-size: 14px; font-weight: bold; color: white; margin: 0; letter-spacing: 0.5px; }
+    .ft-toast-msg { font-size: 12px; color: rgba(255, 255, 255, 0.7); margin: 4px 0 0 0; line-height: 1.5; }
+
+    /* Botón de cerrar */
+    .ft-toast-close {
+        background: none; border: none; padding: 0; cursor: pointer; color: rgba(255, 255, 255, 0.3); transition: color 0.2s;
+    }
+    .ft-toast-close:hover { color: rgba(255, 255, 255, 0.8); }
+</style>
+
+<!-- Aquí pasamos la data de C# al HTML -->
+<span id="server-notifs" style="display: none;"
+      data-success="@successMsg"
+      data-error="@errorMsg"
+      data-warning="@warningMsg">
+</span>
+
+<!-- Contenedor -->
+<div id="toast-container" class="ft-toast-container"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        window.showToast = function (type, title, message) {
+            const container = document.getElementById('toast-container');
+            if(!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `ft-toast-item ft-toast-${type}`;
+
+            const iconClass = type === 'success' ? 'bi-check-lg ft-icon-success' :
+                              type === 'error' ? 'bi-exclamation-triangle ft-icon-error' :
+                              'bi-exclamation-circle ft-icon-warning';
+
+            toast.innerHTML = `
+                <div class="ft-toast-icon ${iconClass.split(' ')[1]}">
+                    <i class="bi ${iconClass.split(' ')[0]}"></i>
+                </div>
+                <div class="ft-toast-content">
+                    <h4 class="ft-toast-title">${title}</h4>
+                    <p class="ft-toast-msg">${message}</p>
+                </div>
+                <button onclick="closeToast(this)" class="ft-toast-close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Animación de entrada
+            setTimeout(() => toast.classList.add('show'), 50);
+
+            // Auto-destrucción
+            setTimeout(() => {
+                if(toast.parentElement) closeToast(toast.querySelector('button'));
+            }, 5000);
+        };
+
+        window.closeToast = function (btn) {
+            const toast = btn.closest('.ft-toast-item');
+            if(!toast) return;
+
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        };
+
+        // LEER MENSAJES DEL CONTROLADOR (TEMPDATA)
+        const notifData = document.getElementById('server-notifs');
+        if (notifData) {
+            const s = notifData.getAttribute('data-success');
+            const e = notifData.getAttribute('data-error');
+            const w = notifData.getAttribute('data-warning');
+
+            if (s) showToast('success', '¡Éxito!', s);
+            if (e) showToast('error', 'Ocurrió un problema', e);
+            if (w) showToast('warning', 'Atención', w);
+        }
+    });
+</script>

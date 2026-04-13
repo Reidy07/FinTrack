@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Alerts;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Alerts;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,7 @@ namespace FinTrack.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AlertDto>>> GetAlerts([FromQuery] string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("User ID is required");
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
 
             var alerts = await _financialService.GetAlertsAsync(userId);
             return Ok(alerts);
@@ -28,6 +29,8 @@ namespace FinTrack.API.Controllers
         [HttpPut("{id}/read")]
         public async Task<IActionResult> MarkAsRead(int id, [FromQuery] string userId)
         {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
+
             await _financialService.MarkAlertAsReadAsync(id, userId);
             return Ok();
         }

@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -47,8 +48,8 @@ namespace FinTrack.Web.Controllers
                     return Json(new { success = true, data = result });
                 }
 
-                var errorMsg = await response.Content.ReadAsStringAsync();
-                return Json(new { success = false, error = $"Error de API: {errorMsg}" });
+                return Json(new { success = false, error = ErrorMessages.ApiSaveError });
+
             }
             catch (Exception ex)
             {

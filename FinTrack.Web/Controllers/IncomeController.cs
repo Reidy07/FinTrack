@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Category;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Category;
 using FinTrack.Core.DTOs.Incomes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,6 +57,7 @@ namespace FinTrack.Web.Controllers
 
             if (!ModelState.IsValid)
             {
+                TempData[TempDataKeys.Warning] = ErrorMessages.RequiredField;
                 await LoadIncomeCategoriesAsync(userId);
                 return View(dto);
             }
@@ -63,9 +65,12 @@ namespace FinTrack.Web.Controllers
             var response = await _httpClient.PostAsJsonAsync($"api/incomes?userId={userId}", dto);
 
             if (response.IsSuccessStatusCode)
+            {
+                TempData[TempDataKeys.Success] = SuccessMessages.Created;
                 return RedirectToAction(nameof(Index));
+            }
 
-            ModelState.AddModelError("", "Error al guardar el ingreso.");
+            TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
             await LoadIncomeCategoriesAsync(userId);
             return View(dto);
         }
@@ -74,7 +79,11 @@ namespace FinTrack.Web.Controllers
         {
             var userId = GetUserId();
             var income = await _httpClient.GetFromJsonAsync<IncomeDto>($"api/incomes/{id}?userId={userId}");
-            if (income == null) return NotFound();
+            if (income == null)
+            {
+                TempData[TempDataKeys.Error] = ErrorMessages.NotFound;
+                return RedirectToAction(nameof(Index));
+            }
 
             await LoadIncomeCategoriesAsync(userId);
             return View(income);
@@ -89,14 +98,19 @@ namespace FinTrack.Web.Controllers
 
             if (!ModelState.IsValid)
             {
+                TempData[TempDataKeys.Warning] = ErrorMessages.RequiredField;
                 await LoadIncomeCategoriesAsync(userId);
                 return View(dto);
             }
 
             var response = await _httpClient.PutAsJsonAsync($"api/incomes/{dto.Id}?userId={userId}", dto);
-            if (response.IsSuccessStatusCode) return RedirectToAction(nameof(Index));
+            if (response.IsSuccessStatusCode)
+            {
+                TempData[TempDataKeys.Success] = SuccessMessages.Updated;
+                return RedirectToAction(nameof(Index));
+            }
 
-            ModelState.AddModelError("", "Error al actualizar.");
+            TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
             await LoadIncomeCategoriesAsync(userId);
             return View(dto);
         }
@@ -106,8 +120,12 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = GetUserId();
+            var response = await _httpClient.DeleteAsync($"api/incomes/{id}?userId={userId}");
 
-            await _httpClient.DeleteAsync($"api/incomes/{id}?userId={userId}");
+            if (response.IsSuccessStatusCode)
+                TempData[TempDataKeys.Success] = SuccessMessages.Deleted;
+            else
+                TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
 
             return RedirectToAction(nameof(Index));
         }

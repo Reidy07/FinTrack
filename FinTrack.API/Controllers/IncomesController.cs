@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Incomes;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Incomes;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,8 @@ namespace FinTrack.API.Controllers
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<IncomeDto>>> GetIncomes(string userId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
         {
+            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
+
             var incomes = await _financialService.GetIncomesByUserAsync(userId, startDate, endDate);
             return Ok(incomes);
         }
@@ -33,7 +36,7 @@ namespace FinTrack.API.Controllers
         public async Task<ActionResult<IncomeDto>> GetIncome(int id, [FromQuery] string userId)
         {
             var income = await _financialService.GetIncomeByIdAsync(id, userId);
-            if (income == null) return NotFound();
+            if (income == null) return NotFound(ErrorMessages.NotFound);
 
             return Ok(income);
         }
@@ -43,8 +46,7 @@ namespace FinTrack.API.Controllers
         {
             var dtoId = dto.Id;
 
-            if (id != dtoId)
-                return BadRequest("El Id de la URL no coincide con el del objeto.");
+            if (id != dto.Id) return BadRequest(ErrorMessages.IdMismatch);
 
             await _financialService.UpdateIncomeAsync(dto, userId);
 

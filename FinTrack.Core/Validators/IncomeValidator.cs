@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.Entities;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.Entities;
 using FluentValidation;
 
 namespace FinTrack.Core.Validators
@@ -8,10 +9,10 @@ namespace FinTrack.Core.Validators
         public IncomeValidator()
         {
             RuleFor(x => x.Amount)
-                .GreaterThan(0).WithMessage("El monto debe ser mayor a cero.");
+                .GreaterThan(0).WithMessage(ErrorMessages.AmountGreaterThanZero);
 
             RuleFor(x => x.Description)
-                .NotEmpty().WithMessage("La descripción es obligatoria.")
+                .NotEmpty().WithMessage(ErrorMessages.RequiredDescription)
                 .MaximumLength(200);
         }
     }

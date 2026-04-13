@@ -33,7 +33,8 @@ namespace FinTrack.Web
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 6;
             })
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddErrorDescriber<CustomIdentityErrorDescriber>();
 
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();

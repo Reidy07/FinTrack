@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.DTOs.Category;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.DTOs.Category;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -28,13 +29,15 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = GetUserId();
-
-            // Llamamos a nuestra API
             var details = await _httpClient.GetFromJsonAsync<CategoryDetailDto>($"api/categories/{id}/details?userId={userId}");
 
-            if (details == null) return NotFound();
+            if (details == null)
+            {
+                TempData[TempDataKeys.Error] = ErrorMessages.NotFound;
+                return RedirectToAction(nameof(Index));
+            }
 
-            return View(details); // Enviamos el DTO a la vista
+            return View(details);
         }
 
         [HttpPost]
@@ -43,7 +46,7 @@ namespace FinTrack.Web.Controllers
         {
             var userId = GetUserId();
 
-            dto.Description ??= string.Empty; // Si viene nulo, lo hace un texto vacío ""
+            dto.Description ??= string.Empty;
             dto.Color = string.IsNullOrWhiteSpace(dto.Color) ? "#3498db" : dto.Color;
 
             ModelState.Remove(nameof(dto.Description));
@@ -51,25 +54,19 @@ namespace FinTrack.Web.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Faltan datos obligatorios (Nombre o Tipo).";
+                TempData[TempDataKeys.Warning] = ErrorMessages.RequiredField;
                 return RedirectToAction(nameof(Index));
             }
 
             var response = await _httpClient.PostAsJsonAsync($"api/categories?userId={userId}", dto);
 
             if (response.IsSuccessStatusCode)
-            {
-                TempData["Success"] = "Categoría creada correctamente.";
-            }
+                TempData[TempDataKeys.Success] = SuccessMessages.Created;
             else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                TempData["Error"] = $"Error al crear: {error}";
-            }
+                TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
 
             return RedirectToAction(nameof(Index));
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CategoryDto dto)
@@ -84,10 +81,10 @@ namespace FinTrack.Web.Controllers
 
             var response = await _httpClient.PutAsJsonAsync($"api/categories/{dto.Id}?userId={userId}", dto);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                TempData["Error"] = "No se pudo actualizar la categoría.";
-            }
+            if (response.IsSuccessStatusCode)
+                TempData[TempDataKeys.Success] = SuccessMessages.Updated;
+            else
+                TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
 
             return RedirectToAction(nameof(Index));
         }
@@ -97,7 +94,13 @@ namespace FinTrack.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = GetUserId();
-            await _httpClient.DeleteAsync($"api/categories/{id}?userId={userId}");
+            var response = await _httpClient.DeleteAsync($"api/categories/{id}?userId={userId}");
+
+            if (response.IsSuccessStatusCode)
+                TempData[TempDataKeys.Success] = SuccessMessages.Deleted;
+            else
+                TempData[TempDataKeys.Error] = ErrorMessages.ApiSaveError;
+
             return RedirectToAction(nameof(Index));
         }
     }

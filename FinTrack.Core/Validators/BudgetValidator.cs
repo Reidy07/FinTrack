@@ -1,4 +1,5 @@
-﻿using FinTrack.Core.Entities;
+﻿using FinTrack.Core.Constants;
+using FinTrack.Core.Entities;
 using FluentValidation;
 
 namespace FinTrack.Core.Validators
@@ -11,7 +12,7 @@ namespace FinTrack.Core.Validators
             RuleFor(x => x.Amount).GreaterThan(0);
             RuleFor(x => x.StartDate).NotEmpty();
             RuleFor(x => x.EndDate).NotEmpty().GreaterThan(x => x.StartDate)
-                .WithMessage("La fecha de fin debe ser posterior a la de inicio.");
+                .WithMessage(ErrorMessages.InvalidEndDate);
         }
     }
 }
