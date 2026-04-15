@@ -1,4 +1,4 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 @{
@@ -7,7 +7,6 @@
     var apiUrl = Configuration["ApiSettings:BaseUrl"];
 }
 
-<!-- Variables para Javascript -->
 <input type="hidden" id="hdnUserId" value="@userId" />
 <input type="hidden" id="hdnApiUrl" value="@apiUrl" />
 
@@ -17,11 +16,16 @@
             <div class="ft-header-title">Centro de Notificaciones</div>
             <div class="ft-header-sub">Revisa tus alertas y recordatorios del sistema</div>
         </div>
+        <div class="flex items-center gap-3">
+            <span id="unreadBadge" class="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs font-medium text-emerald-200"></span>
+            <button id="btnMarkAll" type="button" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                Marcar todas como leídas
+            </button>
+        </div>
     </div>
 
-    <section class="ft-section max-w-4xl">
+    <section class="ft-section max-w">
         <div id="alertsContainer" class="space-y-4">
-            <!-- Esqueleto de carga (Skeleton Loader) mientras la API responde -->
             <div class="animate-pulse flex space-x-4 bg-white/5 p-4 rounded-xl border border-white/10">
                 <div class="rounded-full bg-white/20 h-10 w-10"></div>
                 <div class="flex-1 space-y-4 py-1">
@@ -41,26 +45,55 @@
         document.addEventListener('DOMContentLoaded', async function () {
             const userId = document.getElementById('hdnUserId').value;
             const apiUrl = document.getElementById('hdnApiUrl').value;
-
-            // Limpiamos la URL base para evitar dobles barras
-            const cleanApiUrl = apiUrl.replace(/\/$/, "");
-
+            const cleanApiUrl = (apiUrl || '').replace(/\/$/, '');
             const container = document.getElementById('alertsContainer');
+            const btnMarkAll = document.getElementById('btnMarkAll');
+            const unreadBadge = document.getElementById('unreadBadge');
 
-            try {
-                // LLAMADA A AL API DE ALERTAS
-                const response = await fetch(`${cleanApiUrl}/api/alerts?userId=${userId}`);
+            if (!userId || !cleanApiUrl) {
+                container.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200">No se pudo cargar la configuración de alertas.</div>`;
+                btnMarkAll.disabled = true;
+                return;
+            }
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error("API error fetching alerts:", response.status, response.statusText, errorText);
-                    throw new Error('Error en la red o la API no respondió correctamente.');
+            const escapeHtml = (value) => {
+                const div = document.createElement('div');
+                div.textContent = value ?? '';
+                return div.innerHTML;
+            };
+
+            const buildDate = (value) => {
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
+                return date.toLocaleString('es-DO', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            };
+
+            const severityUi = (severity) => {
+                switch ((severity || '').toLowerCase()) {
+                    case 'warning':
+                        return { iconColor: 'text-amber-400', bgColor: 'bg-amber-400/10', icon: 'bi-exclamation-triangle' };
+                    case 'critical':
+                        return { iconColor: 'text-red-400', bgColor: 'bg-red-400/10', icon: 'bi-x-octagon' };
+                    default:
+                        return { iconColor: 'text-blue-400', bgColor: 'bg-blue-400/10', icon: 'bi-info-circle' };
                 }
+            };
 
-                const alerts = await response.json();
-                container.innerHTML = ''; // Limpiar el loading
+            const renderAlerts = (alerts) => {
+                container.innerHTML = '';
 
-                if (alerts.length === 0) {
+                const unreadCount = alerts.filter(a => !a.isRead).length;
+                unreadBadge.textContent = unreadCount === 1 ? '1 pendiente' : `${unreadCount} pendientes`;
+                unreadBadge.classList.toggle('hidden', unreadCount === 0);
+                btnMarkAll.disabled = unreadCount === 0;
+
+                if (!alerts.length) {
                     container.innerHTML = `
                         <div class="ft-empty">
                             <div class="mx-auto h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
@@ -72,45 +105,99 @@
                     return;
                 }
 
-                // Renderizar cada alerta
                 alerts.forEach(alert => {
-                    // Elegir icono y color según severidad
-                    let iconColor = 'text-blue-400';
-                    let bgColor = 'bg-blue-400/10';
-                    let icon = 'bi-info-circle';
-
-                    if (alert.severity === 'Warning') {
-                        iconColor = 'text-amber-400'; bgColor = 'bg-amber-400/10'; icon = 'bi-exclamation-triangle';
-                    } else if (alert.severity === 'Critical') {
-                        iconColor = 'text-red-400'; bgColor = 'bg-red-400/10'; icon = 'bi-x-octagon';
-                    }
-
+                    const ui = severityUi(alert.severity);
                     const isReadStyle = alert.isRead ? 'opacity-60' : '';
                     const newBadge = !alert.isRead ? `<span class="h-2 w-2 rounded-full bg-blue-500 mr-2 mt-1.5"></span>` : '';
-
-                    const dateStr = new Date(alert.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+                    const actionButton = !alert.isRead
+                        ? `<button type="button" class="mark-alert-read rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 transition hover:bg-white/10" data-id="${alert.id}">Marcar como leída</button>`
+                        : `<span class="text-xs text-white/40">Leída</span>`;
 
                     const alertHtml = `
                         <div class="flex items-start p-4 rounded-xl bg-white/5 border ${alert.isRead ? 'border-white/5' : 'border-white/20'} transition hover:bg-white/10 ${isReadStyle}">
                             ${newBadge}
-                            <div class="flex-shrink-0 h-10 w-10 rounded-xl ${bgColor} flex items-center justify-center mr-4">
-                                <i class="bi ${icon} ${iconColor} text-lg"></i>
+                            <div class="flex-shrink-0 h-10 w-10 rounded-xl ${ui.bgColor} flex items-center justify-center mr-4">
+                                <i class="bi ${ui.icon} ${ui.iconColor} text-lg"></i>
                             </div>
                             <div class="flex-1">
-                                <h4 class="text-white font-semibold flex items-center justify-between">
-                                    ${alert.title}
-                                    <span class="text-xs font-normal text-white/40">${dateStr}</span>
-                                </h4>
-                                <p class="text-white/70 text-sm mt-1">${alert.message}</p>
+                                <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                                    <div>
+                                        <h4 class="text-white font-semibold">${escapeHtml(alert.title)}</h4>
+                                        <p class="text-white/70 text-sm mt-1">${escapeHtml(alert.message)}</p>
+                                    </div>
+                                    <div class="flex min-w-[140px] flex-col items-end gap-2">
+                                        <span class="text-xs font-normal text-white/40 text-right">${buildDate(alert.createdAt)}</span>
+                                        ${actionButton}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    container.innerHTML += alertHtml;
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', alertHtml);
                 });
 
+                document.querySelectorAll('.mark-alert-read').forEach(button => {
+                    button.addEventListener('click', async () => {
+                        button.disabled = true;
+                        try {
+                            const response = await fetch(`${cleanApiUrl}/api/alerts/${button.dataset.id}/read?userId=${encodeURIComponent(userId)}`, {
+                                method: 'POST'
+                            });
+
+                            if (!response.ok) {
+                                const errorText = await response.text();
+                                throw new Error(errorText || 'No se pudo marcar la alerta como leída.');
+                            }
+
+                            await loadAlerts();
+                        } catch (error) {
+                            console.error('Error marcando alerta como leída:', error);
+                            button.disabled = false;
+                            alert(error.message || 'No se pudo marcar la alerta como leída.');
+                        }
+                    });
+                });
+            };
+
+            const loadAlerts = async () => {
+                const response = await fetch(`${cleanApiUrl}/api/alerts?userId=${encodeURIComponent(userId)}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API error fetching alerts:', response.status, response.statusText, errorText);
+                    throw new Error('Hubo un problema al cargar las alertas desde la API.');
+                }
+
+                const alerts = await response.json();
+                renderAlerts(Array.isArray(alerts) ? alerts : []);
+            };
+
+            btnMarkAll.addEventListener('click', async () => {
+                btnMarkAll.disabled = true;
+                try {
+                    const response = await fetch(`${cleanApiUrl}/api/alerts/mark-all-read?userId=${encodeURIComponent(userId)}`, {
+                        method: 'POST'
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'No se pudieron marcar todas las alertas como leídas.');
+                    }
+
+                    await loadAlerts();
+                } catch (error) {
+                    console.error('Error marcando todas las alertas:', error);
+                    alert(error.message || 'No se pudieron marcar todas las alertas como leídas.');
+                } finally {
+                    btnMarkAll.disabled = false;
+                }
+            });
+
+            try {
+                await loadAlerts();
             } catch (error) {
-                console.error("Error obteniendo alertas:", error);
-                container.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200">Hubo un problema al cargar las alertas. Verifica que la API esté encendida y que la configuración del puerto sea correcta. Detalles: ${error.message}</div>`;
+                console.error('Error obteniendo alertas:', error);
+                container.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200">Hubo un problema al cargar las alertas. Verifica que la API esté encendida y que la configuración del puerto sea correcta. Detalles: ${escapeHtml(error.message)}</div>`;
+                btnMarkAll.disabled = true;
             }
         });
     </script>

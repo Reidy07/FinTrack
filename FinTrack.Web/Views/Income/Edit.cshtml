@@ -19,7 +19,7 @@
         </a>
     </div>
 
-    <section class="ft-section max-w-3xl">
+    <section class="ft-section max-w">
         <form asp-action="Edit" method="post" class="space-y-4">
             @Html.AntiForgeryToken()
             <input asp-for="Id" type="hidden" />
@@ -48,7 +48,7 @@
 
             <div>
                 <label class="block text-sm text-white/60 mb-2">Categoría</label>
-                <select asp-for="CategoryId" class="ft-input" asp-items="ViewBag.Categories">
+                <select asp-for="CategoryId" class="ft-input bg-dark" asp-items="ViewBag.Categories">
                     <option value="">Selecciona una categoría</option>
                 </select>
                 <span asp-validation-for="CategoryId" class="text-xs text-red-200"></span>

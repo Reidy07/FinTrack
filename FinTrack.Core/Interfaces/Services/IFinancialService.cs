@@ -41,8 +41,10 @@ namespace FinTrack.Core.Interfaces.Services
         Task<DashboardSummaryDto> GetDashboardSummaryAsync(string userId, DateTime? month);
         Task<decimal> GetCurrentBalanceAsync(string userId);
 
-        // Alerts
+        // Alertas
         Task<IEnumerable<AlertDto>> GetAlertsAsync(string userId);
+        Task<int> GetUnreadAlertCountAsync(string userId);
         Task MarkAlertAsReadAsync(int id, string userId);
+        Task MarkAllAlertsAsReadAsync(string userId);
     }
 }

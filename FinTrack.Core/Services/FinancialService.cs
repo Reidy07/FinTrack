@@ -632,15 +632,40 @@ namespace FinTrack.Core.Services
             });
         }
 
-        public async Task MarkAlertAsReadAsync(int alertId, string userId)
+        // =========================
+        // ALERTAS (faltantes interfaz)
+        // =========================
+        public async Task<int> GetUnreadAlertCountAsync(string userId)
         {
-            var alert = await unitOfWork.Alerts.GetByIdAsync(alertId);
-            if (alert != null && alert.UserId == userId)
+            var alerts = await unitOfWork.Alerts.FindAsync(a => a.UserId == userId && !a.IsRead);
+            return alerts.Count();
+        }
+
+        public async Task MarkAlertAsReadAsync(int id, string userId)
+        {
+            var alert = await unitOfWork.Alerts.GetByIdAsync(id);
+            if (alert == null || alert.UserId != userId)
+                return;
+
+            if (!alert.IsRead)
             {
                 alert.IsRead = true;
                 unitOfWork.Alerts.Update(alert);
                 await unitOfWork.CompleteAsync();
             }
+        }
+
+        public async Task MarkAllAlertsAsReadAsync(string userId)
+        {
+            var alerts = await unitOfWork.Alerts.FindAsync(a => a.UserId == userId && !a.IsRead);
+
+            foreach (var alert in alerts)
+            {
+                alert.IsRead = true;
+                unitOfWork.Alerts.Update(alert);
+            }
+
+            await unitOfWork.CompleteAsync();
         }
     }
 }

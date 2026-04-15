@@ -8,7 +8,7 @@ namespace FinTrack.Core.Services
     {
         private readonly IFinancialService _financialService;
 
-        private readonly string _geminiApiKey = "PRIVATE";
+        private readonly string _geminiApiKey = "AIzaSyDwu8dpkZtctPUv7WkTxT3C5-Do3fadXOc";
 
         public AIChatbotService(IFinancialService financialService)
         {

@@ -14,7 +14,7 @@
     var initial = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName.Substring(0, 1).ToUpper() : "U";
 }
 
-<div class="ft-page max-w-4xl">
+<div class="ft-page max-w">
 
     <!-- Encabezado -->
     <div class="ft-header mb-6">
@@ -142,8 +142,8 @@
 
         <div class="flex gap-4">
             <a asp-controller="Reports"
-               asp-action="ExportPdf"
-               class="ft-btn-secondary w-full text-center flex-1 flex items-center justify-center">
+                   asp-action="ExportPdf"
+                   class="ft-btn-secondary w-full text-center flex-1 flex items-center justify-center">
                 Exportar datos
             </a>>
             <a asp-page="DeletePersonalData" class="ft-btn bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 flex-1">

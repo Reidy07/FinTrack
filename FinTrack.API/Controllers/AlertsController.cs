@@ -1,4 +1,4 @@
-﻿using FinTrack.Core.Constants;
+using FinTrack.Core.Constants;
 using FinTrack.Core.DTOs.Alerts;
 using FinTrack.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,20 +19,41 @@ namespace FinTrack.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AlertDto>>> GetAlerts([FromQuery] string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(ErrorMessages.UserIdRequired);
 
             var alerts = await _financialService.GetAlertsAsync(userId);
             return Ok(alerts);
         }
 
-        // Endpoint para marcar una alerta como leída
-        [HttpPut("{id}/read")]
+        [HttpGet("unread-count")]
+        public async Task<ActionResult<int>> GetUnreadCount([FromQuery] string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(ErrorMessages.UserIdRequired);
+
+            var count = await _financialService.GetUnreadAlertCountAsync(userId);
+            return Ok(count);
+        }
+
+        [HttpPost("{id}/read")]
         public async Task<IActionResult> MarkAsRead(int id, [FromQuery] string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest(ErrorMessages.UserIdRequired);
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(ErrorMessages.UserIdRequired);
 
             await _financialService.MarkAlertAsReadAsync(id, userId);
-            return Ok();
+            return NoContent();
+        }
+
+        [HttpPost("mark-all-read")]
+        public async Task<IActionResult> MarkAllAsRead([FromQuery] string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(ErrorMessages.UserIdRequired);
+
+            await _financialService.MarkAllAlertsAsReadAsync(userId);
+            return NoContent();
         }
     }
 }

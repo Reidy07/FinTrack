@@ -1,8 +1,9 @@
 ﻿@using FinTrack.Infrastructure.Identity
 @using Microsoft.AspNetCore.Identity
+@using FinTrack.Core.Interfaces.Services
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
-
+@inject IFinancialService FinancialService
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
@@ -13,6 +14,7 @@
     string lastName = string.Empty;
     string email = User.Identity?.Name ?? string.Empty;
     string initials = "U";
+    int unreadAlertsCount = 0;
 
     if (isSignedIn)
     {
@@ -24,11 +26,18 @@
         var firstInitial = string.IsNullOrWhiteSpace(firstName) ? "U" : firstName[0].ToString().ToUpper();
         var lastInitial = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName[0].ToString().ToUpper();
         initials = $"{firstInitial}{lastInitial}";
+
+        var currentUserId = user?.Id;
+        if (!string.IsNullOrWhiteSpace(currentUserId))
+        {
+            unreadAlertsCount = await FinancialService.GetUnreadAlertCountAsync(currentUserId);
+        }
     }
 
     var brandController = isSignedIn ? "Dashboard" : "Home";
     var brandAction = "Index";
     var logoutReturnUrl = Url.Action("Index", "Home", new { area = "" });
+
 }
 
 <!DOCTYPE html>
@@ -38,7 +47,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - FinTrack</title>
 
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="~/images/fintrack-logo.jpg" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
     <link rel="stylesheet" href="~/fontawesome-free-7.2.0-web/css/all.min.css" asp-append-version="true" />
@@ -124,7 +133,7 @@
                                     <a asp-controller="Predictions"
                                            asp-action="Index"
                                            class="ft-nav-link @((currentController == "Predictions" && currentAction == "Index") ? "active" : "")">
-                                        <i class="fas fa-sparkles"></i>
+                                        <i class="fa-solid fa-money-bill-trend-up"></i>
                                         <span>Predicciones IA</span>
                                     </a>
                                 </li>
@@ -144,13 +153,22 @@
                                            class="ft-nav-link @((currentController == "Alerts" && currentAction == "Index") ? "active" : "")">
                                         <i class="fas fa-bell"></i>
                                         <span>Alertas</span>
+
+                                        @if (unreadAlertsCount > 0)
+                                        {
+                                            <span class="ft-alert-badge">
+                                                @(unreadAlertsCount > 99 ? "99+" : unreadAlertsCount.ToString())
+                                            </span>
+                                        }
                                     </a>
                                 </li>
                             </ul>
                         </nav>
 
                         <div class="ft-sidebar__footer">
-                            <div class="ft-user-card">
+                            <a asp-area="Identity"
+                                   asp-page="/Account/Manage/Index"
+                                   class="ft-user-card">
                                 <div class="ft-user-card__avatar">
                                     @initials
                                 </div>
@@ -158,7 +176,7 @@
                                     <div class="ft-user-card__name">@firstName @lastName</div>
                                     <div class="ft-user-card__link">@email</div>
                                 </div>
-                            </div>
+                            </a>
 
                             <form asp-area="Identity"
                                   asp-page="/Account/Logout"

@@ -19,7 +19,7 @@
         </a>
     </div>
 
-    <section class="ft-section max-w-3xl">
+    <section class="ft-section max-w">
         <form asp-action="Edit" method="post" class="space-y-4">
             @Html.AntiForgeryToken()
             <input asp-for="Id" type="hidden" />
@@ -63,7 +63,7 @@
 
                 <div id="patternWrapper" style="display: none;">
                     <label class="block text-sm text-white/60 mb-2">Frecuencia</label>
-                    <select asp-for="RecurringPattern" class="ft-input">
+                    <select asp-for="RecurringPattern" class="ft-input bg-dark">
                         <option value="">Selecciona la frecuencia</option>
                         <option value="Diario">Diario</option>
                         <option value="Semanal">Semanal</option>
