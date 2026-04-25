@@ -633,7 +633,7 @@ namespace FinTrack.Core.Services
         }
 
         // =========================
-        // ALERTAS (faltantes interfaz)
+        // ALERTAS
         // =========================
         public async Task<int> GetUnreadAlertCountAsync(string userId)
         {

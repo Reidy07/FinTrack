@@ -86,28 +86,48 @@
         }
 
         <!-- 4 KPIs SUPERIORES -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div class="ft-kpi bg-success">
-                <div class="ft-kpi-title text-white">Ingresos del mes</div>
-                <div class="ft-kpi-value">@FormatCurrency(Model.Summary.TotalIncome)</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+
+            <div class="ft-surface border border-white/10 p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                <div class="text-[11px] text-white/50 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
+                    Ingresos del mes
+                    <i class="bi bi-arrow-down-left text-sm"></i>
+                </div>
+                <div class="text-2xl font-bold tracking-tight truncate">
+                    @FormatCurrency(Model.Summary.TotalIncome)
+                </div>
             </div>
 
-            <div class="ft-kpi bg-danger">
-                <div class="ft-kpi-title text-white">Gastos del mes</div>
-                <div class="ft-kpi-value">@FormatCurrency(Model.Summary.TotalExpenses)</div>
+            <div class="ft-surface border border-white/10 p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                <div class="text-[11px] text-white/50 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
+                    Gastos del mes
+                    <i class="bi bi-arrow-up-right text-sm"></i>
+                </div>
+                <div class="text-2xl font-bold text-red-400 tracking-tight truncate">
+                    @FormatCurrency(Model.Summary.TotalExpenses)
+                </div>
             </div>
 
-            <div class="ft-kpi bg-primary border border-dark">
-                <div class="ft-kpi-title text-white">Balance Total Acumulado</div>
-                <div class="ft-kpi-value text-white @(Model.CurrentBalance < 0 ? "text-red-400" : "text-white")">
+            <div class="ft-surface border border-blue-500/30 p-4 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 transition-all shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                <div class="text-[11px] text-blue-200/70 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
+                    Balance Acumulado
+                    <i class="bi bi-wallet2 text-blue-400/60 text-sm"></i>
+                </div>
+                <div class="text-2xl font-bold @(Model.CurrentBalance < 0 ? "text-red-400" : "text-white") tracking-tight truncate">
                     @FormatCurrency(Model.CurrentBalance)
                 </div>
             </div>
 
-            <div class="ft-kpi">
-                <div class="ft-kpi-title text-white">Tasa de ahorro</div>
-                <div class="ft-kpi-value text-white">@Model.SavingsRate.ToString("N2")%</div>
+            <div class="ft-surface border border-white/10 p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                <div class="text-[11px] text-white/50 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
+                    Tasa de Ahorro
+                    <i class="bi bi-piggy-bank text-white/40 text-sm"></i>
+                </div>
+                <div class="text-2xl font-bold text-white tracking-tight truncate">
+                    @Model.SavingsRate.ToString("N2")%
+                </div>
             </div>
+
         </div>
 
         <!-- GRÁFICA PRINCIPAL (100% ancho) -->

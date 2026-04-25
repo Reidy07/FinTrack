@@ -492,3 +492,5 @@ $RECYCLE.BIN/
 /FinTrack.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
 /FinTrack.Infrastructure/Migrations/20260412040239_InitialMigration.cs
 /FinTrack.Infrastructure/Migrations/20260412040239_InitialMigration.Designer.cs
+/FinTrack.Web/appsettings.json
+/FinTrack.API/appsettings.json
