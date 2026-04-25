@@ -1,0 +1,27 @@
+﻿@page
+@model ConfirmEmailModel
+@{
+    ViewData["Title"] = "Confirmación Exitosa";
+}
+
+<div class="text-center mb-8">
+    <div class="h-12 w-12 rounded-2xl bg-emerald-400/20 border border-emerald-400/30 flex items-center justify-center mx-auto mb-4 shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+        <i class="bi bi-check2-circle text-emerald-400 text-2xl"></i>
+    </div>
+    <h1 class="text-2xl font-bold text-white tracking-tight">Verificación completada</h1>
+</div>
+
+<div class="text-center space-y-6">
+    <p class="text-sm text-white/70 leading-relaxed font-medium">
+        @Model.StatusMessage
+    </p>
+
+    <p class="text-xs text-white/40">
+        Ya puedes acceder a todas las funcionalidades de FinTrack.
+    </p>
+
+    <!-- Botón para volver a iniciar sesión -->
+    <a asp-page="./Login" class="ft-btn-primary2 w-full flex items-center justify-center py-3 mt-6">
+        Ir a Iniciar Sesión <i class="bi bi-arrow-right ml-2"></i>
+    </a>
+</div>
